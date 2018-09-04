@@ -46,11 +46,14 @@ class Particle {
 
     // colors
     colorMode(HSB, 360, 100, 100, 100);
-    this.fillColor = color(random(0,360), 73, 78, 60);
+    //this.fillColor = color(random(0,360), 73, 78, 60);
+    float hue = idCounter/settings.getFloat("number of particles")*360;
+    this.fillColor = color(hue, 80, 80, 60);
     //this.fillColor = color(0, 100, 100, 100);
     this.strokeColor = color(hue(this.fillColor),
                              saturation(this.fillColor),
-                             brightness(this.fillColor) + 10,
+                             //brightness(this.fillColor) - 30,
+                             0,
                              80);
   }
   

@@ -26,7 +26,7 @@
 
     "draw wall markers": true,
     "wall marker thickness": 5,
-    "draw velocity line": true,
+    "draw velocity line": false,
     "velocity line scale": 10,
     "draw acceleration line": false,
     "draw preferred distance": true,

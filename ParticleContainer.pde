@@ -420,18 +420,23 @@ class ParticleContainer {
         
         if (settings.getBoolean("draw preferred distance")) {
           PVector preferredPos = this.calculatePreferredPos(src, trg);
-          noFill();
           colorMode(RGB, 1.0, 1.0, 1.0, 1.0);
           int strokeColor = color(red(trg.strokeColor),
                                   green(trg.strokeColor),
                                   blue(trg.strokeColor),
                                   0.20);
+          int fillColor = color(red(trg.fillColor),
+                                green(trg.fillColor),
+                                blue(trg.fillColor),
+                                0.20);
 
           float prefMarkerSize = settings.getFloat("preferred marker size");
-          fill(strokeColor);
-          stroke(strokeColor);
+          fill(fillColor);
+          //stroke(strokeColor);
+          noStroke();
           ellipseMode(CENTER);
           ellipse(preferredPos.x, preferredPos.y, prefMarkerSize, prefMarkerSize);
+          stroke(fillColor);
           line(preferredPos.x, preferredPos.y, src.pos.x, src.pos.y);
         }
         
