@@ -421,14 +421,15 @@ class ParticleContainer {
         if (settings.getBoolean("draw preferred distance")) {
           PVector preferredPos = this.calculatePreferredPos(src, trg);
           colorMode(RGB, 1.0, 1.0, 1.0, 1.0);
+          float transparency = (preferredReach-absDist)/preferredReach*0.6;
           int strokeColor = color(red(trg.strokeColor),
                                   green(trg.strokeColor),
                                   blue(trg.strokeColor),
-                                  0.20);
+                                  transparency);
           int fillColor = color(red(trg.fillColor),
                                 green(trg.fillColor),
                                 blue(trg.fillColor),
-                                0.20);
+                                transparency);
 
           float prefMarkerSize = settings.getFloat("preferred marker size");
           fill(fillColor);
@@ -436,7 +437,9 @@ class ParticleContainer {
           noStroke();
           ellipseMode(CENTER);
           ellipse(preferredPos.x, preferredPos.y, prefMarkerSize, prefMarkerSize);
+          //ellipse(preferredPos.x+random(-2,2), preferredPos.y+random(-2,2), prefMarkerSize, prefMarkerSize);
           stroke(fillColor);
+          //line(preferredPos.x+random(-5,5), preferredPos.y+random(-5,5), src.pos.x, src.pos.y);
           line(preferredPos.x, preferredPos.y, src.pos.x, src.pos.y);
         }
         

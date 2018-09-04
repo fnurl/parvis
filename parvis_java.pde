@@ -56,17 +56,18 @@ void setup() {
 
 
 void draw() {
+  //if (frameCount % 10 == 0)
   background(bgColor);
   particleContainer.updateAndDraw();
   
   
-  // add bloom filter
+  // add shader
   if(true) {
     fx.render()
       //.blur(10, 0.8)
-      .blur(10, 1.5)
+      .blur(10, 1.3)
       //.sobel()
-      //.pixelate(150.0)
+      //.pixelate(500.0)
       //.brightPass(0.1)
       //.bloom(0.8, 100, 20)
       //.toon()

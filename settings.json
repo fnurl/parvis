@@ -9,7 +9,7 @@
     "number of particles": 20,
 
     "particle size": 10,
-    "preferred marker size": 10,
+    "preferred marker size": 5,
     "speed magnification": 8,
 
     "preferred reach": 400,
