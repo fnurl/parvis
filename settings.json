@@ -12,6 +12,7 @@
     "preferred marker size": 10,
     "speed magnification": 8,
 
+    "preferred reach": 400,
     "interaction distance": 200,
     "preferred distance": 100,
     "particle energy": 0.1,

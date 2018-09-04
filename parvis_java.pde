@@ -63,8 +63,8 @@ void draw() {
   // add bloom filter
   if(true) {
     fx.render()
-      .blur(10, 0.8)
-      //.blur(10, 1.5)
+      //.blur(10, 0.8)
+      .blur(10, 1.5)
       //.sobel()
       //.pixelate(150.0)
       //.brightPass(0.1)

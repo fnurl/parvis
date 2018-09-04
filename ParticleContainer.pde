@@ -389,10 +389,14 @@ class ParticleContainer {
         // cache settings etc locally
         float interactionDistance = settings.getFloat("interaction distance");
         float preferredDistance = settings.getFloat("preferred distance");
+        // distance preferred markers show up
+        float preferredReach = settings.getFloat("preferred reach");
 
         // skip interactions outside of range
         // interaction distance 0 means unlimited interaction, i.e. everything interacts
-        if (interactionDistance > 0 && absDist > interactionDistance)
+        // preferredReach is the distance preferred markers start being displayed
+        // don't skip src/trg pair if absDist is within either interactionDistance or preferredReach
+        if (interactionDistance > 0 && absDist > interactionDistance && absDist > preferredReach)
           continue;
         
         // show interactions?
@@ -418,16 +422,17 @@ class ParticleContainer {
           PVector preferredPos = this.calculatePreferredPos(src, trg);
           noFill();
           colorMode(RGB, 1.0, 1.0, 1.0, 1.0);
-          int strokeColor = color(red(src.strokeColor),
-                                  green(src.strokeColor),
-                                  blue(src.strokeColor),
-                                  0.10);
+          int strokeColor = color(red(trg.strokeColor),
+                                  green(trg.strokeColor),
+                                  blue(trg.strokeColor),
+                                  0.20);
 
           float prefMarkerSize = settings.getFloat("preferred marker size");
           fill(strokeColor);
           stroke(strokeColor);
           ellipseMode(CENTER);
           ellipse(preferredPos.x, preferredPos.y, prefMarkerSize, prefMarkerSize);
+          line(preferredPos.x, preferredPos.y, src.pos.x, src.pos.y);
         }
         
         // Each particle attracts all other particles. One at the time.
