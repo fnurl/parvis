@@ -67,7 +67,8 @@ class Particle {
   }
 
   void updateSpeedSize() {
-    this.speedSize = this.vel.mag() * settings.getFloat("speed magnification") + this.size;
+    //this.speedSize = this.vel.mag() * settings.getFloat("speed magnification") + this.size;
+    this.speedSize = this.size - (this.vel.mag() * settings.getFloat("speed magnification"));
   }
 
   void update() {

@@ -4,11 +4,11 @@
     "velocity limit": 5,
     "limit velocity": true,
     "acceleration decay": 0.95,
-    "friction": 0.00001,
+    "friction": 0.0001,
 
-    "number of particles": 20,
+    "number of particles": 30,
 
-    "particle size": 10,
+    "particle size": 50,
     "preferred marker size": 5,
     "speed magnification": 8,
 
@@ -20,8 +20,8 @@
     "apply attraction": true,
     "apply repell": true,
 
-    "wall energy": 5,
-    "wall push distance": 70,
+    "wall energy": 10,
+    "wall push distance": 100,
     "wall padding": 5,
 
     "draw wall markers": true,
