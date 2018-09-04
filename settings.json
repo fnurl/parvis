@@ -1,0 +1,34 @@
+{
+    "wrap around": false,
+
+    "velocity limit": 5,
+    "limit velocity": true,
+    "acceleration decay": 0.95,
+    "friction": 0.00001,
+
+    "number of particles": 20,
+
+    "particle size": 10,
+    "preferred marker size": 10,
+    "speed magnification": 8,
+
+    "interaction distance": 200,
+    "preferred distance": 100,
+    "particle energy": 0.1,
+    "repell factor": 10,
+    "apply attraction": true,
+    "apply repell": true,
+
+    "wall energy": 5,
+    "wall push distance": 70,
+    "wall padding": 5,
+
+    "draw wall markers": true,
+    "wall marker thickness": 5,
+    "draw velocity line": true,
+    "velocity line scale": 10,
+    "draw acceleration line": false,
+    "draw preferred distance": true,
+    "draw interactions": false
+}
+
