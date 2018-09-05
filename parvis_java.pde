@@ -13,12 +13,15 @@ final int DEBUG = 0;
 JSONObject settings;
 int idCounter;
 
+// keyboard controlls
+HashMap<Character,String> keybindings;
+
 // the particle container
 ParticleContainer particleContainer;
 
 // some colors
 HashMap<String,Integer> colors;
-int bgColor;
+String bgColor;
 
 // directional unit vectors for convenience
 final PVector upVector = new PVector(0, -1);
@@ -28,10 +31,10 @@ final PVector rightVector = new PVector(1, 0);
 
 void setup() {
   settings = loadJSONObject("settings.json");
-  //settings.setBoolean("wrap around", true);
   //size(800, 600);
-  //size(1200, 800, P2D);
-  fullScreen(P2D);
+  //fullScreen(P2D);
+  size(1280, 800, P2D);
+  
   frameRate(60);
   
   fx = new PostFX(this);
@@ -40,8 +43,21 @@ void setup() {
   colors = new HashMap<String,Integer>();
   colors.put("white", #ffffff);
   colors.put("black", #000000);
-  bgColor = colors.get("white");
-  background(bgColor);
+  
+  // load color settings
+  bgColor = settings.getString("background");
+  background(colors.get(bgColor));
+  
+  // keybindings
+  keybindings = new HashMap<Character,String>();
+  keybindings.put('p', "draw preferred distance");
+  keybindings.put('i', "draw interactions");
+  keybindings.put('w', "wrap around");
+  keybindings.put('a', "apply attraction");
+  keybindings.put('r', "apply repell");
+  keybindings.put('v', "draw velocity line");
+  keybindings.put('m', "draw wall markers");
+  keybindings.put('l', "limit velocity");
   
   // particle container
   particleContainer = new ParticleContainer();
@@ -54,13 +70,33 @@ void setup() {
   }
 }
 
+void keyPressed() {
+  println("key pressed: " + key);
+  
+  boolean boolSetting;
+  String settingName;
+
+  if (keybindings.containsKey(key)) {
+    settingName = keybindings.get(key);
+    boolSetting = settings.getBoolean(settingName);
+    settings.setBoolean(settingName, !boolSetting);
+  }
+  
+  if (key == 'b') {
+    if (bgColor == "white") {
+      bgColor = "black";
+    } else {
+      bgColor = "white";
+    }
+  }
+}
+
 
 void draw() {
   //if (frameCount % 10 == 0)
-  background(bgColor);
+  background(colors.get(bgColor));
   particleContainer.updateAndDraw();
-  
-  
+    
   // add shader
   if(true) {
     fx.render()

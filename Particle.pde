@@ -8,6 +8,8 @@ class Particle {
   Float preferredDistance;
   Float size;
   String name;
+  Float repellFactor;
+  Float attractFactor;
 
   int fillColor;
   int strokeColor;
@@ -43,6 +45,12 @@ class Particle {
     // size
     this.size = settings.getFloat("particle size");
     this.updateSpeedSize();
+    
+    // repell factor
+    this.repellFactor = settings.getFloat("repell factor");
+    
+    // attract factor
+    this.attractFactor = settings.getFloat("attract factor");
 
     // colors
     colorMode(HSB, 360, 100, 100, 100);
@@ -80,9 +88,6 @@ class Particle {
   void draw() {
     fill(this.fillColor);
     stroke(this.strokeColor);
-    
-    if (DEBUG == 5)
-      println("Drawing particle: " + this.name + " with size: " + speedSize + " @ " + this.pos);
     
     // body
     ellipseMode(CENTER);

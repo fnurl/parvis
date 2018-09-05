@@ -1,35 +1,40 @@
 {
-    "wrap around": false,
-
-    "velocity limit": 5,
-    "limit velocity": true,
-    "acceleration decay": 0.95,
-    "friction": 0.0001,
-
     "number of particles": 30,
+    "background": "white",
 
-    "particle size": 50,
-    "preferred marker size": 5,
-    "speed magnification": 8,
 
-    "preferred reach": 400,
-    "interaction distance": 200,
-    "preferred distance": 100,
-    "particle energy": 0.1,
-    "repell factor": 10,
+    "wrap around": false,
+    "limit velocity": true,
     "apply attraction": true,
     "apply repell": true,
+    "apply friction": true,
+    "apply gravity": false,
+
+    "velocity limit": 5,
+    "acceleration decay": 0.95,
+    "friction": 0.0001,
+    "interaction distance": 200,
 
     "wall energy": 10,
     "wall push distance": 100,
     "wall padding": 5,
+    "wall marker thickness": 5,
 
     "draw wall markers": true,
-    "wall marker thickness": 5,
-    "draw velocity line": false,
-    "velocity line scale": 10,
-    "draw acceleration line": false,
     "draw preferred distance": true,
-    "draw interactions": false
+    "draw interactions": false,
+
+    "particle size": 50,
+    "preferred marker size": 5,
+    "speed magnification": 8,
+    "velocity line scale": 10,
+    "preferred reach": 400,
+    "preferred distance": 100,
+    "particle energy": 0.1,
+    "repell factor": 10,
+    "attract factor": 1,
+    "draw acceleration line": false,
+    "draw velocity line": false
+
 }
 

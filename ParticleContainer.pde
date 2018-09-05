@@ -4,10 +4,9 @@ class ParticleContainer {
 
   ArrayList<Particle> particles;
   PVector gravity;
-  Float velocityLimit;
-  Float wallEnergy;
-  Float wallPushDistance;
-  Integer wallPadding;
+  float wallEnergy;
+  float wallPushDistance;
+  int wallPadding;
   
   int top;
   int bottom;
@@ -16,15 +15,7 @@ class ParticleContainer {
   
   /**
    * Create a particle container.
-   * - width/height: width and height of the container
-   * - gravity: Vector() for the environmental gravitational force to be applied to all particles.
-   * - friction: float with the friction of the container
-   * - velocity_limit: limit particle velocities
-   * - max_interaction_dist: distance which particles stop effecting each other
-   * - wall_energy: the energy the walls have to use for pushing
-   * - wall_push_distance: the distance at which the container walls start pushing particles
-   * - wrap: boolean whether particles wrap around the edges of the container
-   * - wall_padding: safety distance applied to walls
+   * Settings and default values are fetched from settings.json
    */
   ParticleContainer() {
     this.particles = new ArrayList<Particle>();
@@ -35,21 +26,21 @@ class ParticleContainer {
     this.initWithDefaults();
   }
 
+
   void initWithDefaults() {
     this.gravity = new PVector(0, 0);
-    this.velocityLimit = settings.getFloat("velocity limit");
-    println(""+this.velocityLimit);
+    
+    // only load non-global settings into instance variables
     this.wallEnergy = settings.getFloat("wall energy");
-    println(""+this.wallEnergy);
     this.wallPushDistance = settings.getFloat("wall push distance");
-    println(""+this.wallPushDistance);
     this.wallPadding = settings.getInt("wall padding");
-    println(""+this.wallPadding);
   }
+  
   
   void addParticle(Particle particle) {
     this.particles.add(particle);
   }
+  
   
   void updateAndDraw() {
     // let particles interact with each other (no positions updated, just their velocities)
@@ -57,14 +48,17 @@ class ParticleContainer {
     
     // now apply wall bounce (+ limit to container) or let them wrap around
     for (Particle p : this.particles) {
+
       // bounce if not wrap around
       if (!settings.getBoolean("wrap around")) {
         this.bounceParticleOffWalls(p);
       }
       
       // apply environmental forces: friction, gravity, velocity limit
-      this.applyFriction(p);
-      this.applyGravity(p);
+      if (settings.getBoolean("apply friction"))
+        this.applyFriction(p);
+      if (settings.getBoolean("apply gravity"))
+        this.applyGravity(p);
       if (settings.getBoolean("limit velocity"))
         this.limitParticleVelocity(p);
       
@@ -83,6 +77,9 @@ class ParticleContainer {
     }
   }
   
+  /**
+   * Wrap a particle around container edges if necessary
+   */
   void wrapParticle(Particle p) {
     if (p.pos.x < this.left) {
       p.pos.x = this.right - this.wallPadding;
@@ -97,6 +94,10 @@ class ParticleContainer {
     }
   }
   
+  
+  /**
+   * Prevent particle from leaving the container bounds.
+   */
   void restrictParticleToContainer(Particle p) {
     if (p.pos.x <= this.left) {
       p.pos.x = this.left + this.wallPadding;
@@ -110,19 +111,34 @@ class ParticleContainer {
       p.pos.y = this.bottom - this.wallPadding;
     }
   }
+
   
+  /**
+   * Reduce the velocity of a particle by a percentage (friction)
+   * stored in settings.
+   */
   void applyFriction(Particle p) {
     PVector frictionForce = PVector.mult(p.vel, settings.getFloat("friction"));
     p.vel = PVector.sub(p.vel, frictionForce);
   }
   
+  
+  /**
+   * Add gravitational force to particel velocity
+   */
   void applyGravity(Particle p) {
-    p.vel.sub(this.gravity);
+    p.vel.add(this.gravity);
   }
   
+  
+  /**
+   * Limit a particles velocity.
+   * value is fetched from settings.
+   */
   void limitParticleVelocity(Particle p) {
-    p.vel.limit(this.velocityLimit);
+    p.vel.limit(settings.getFloat("velocity limit"));
   }
+
 
   /**
    * a sinus shaped down slope function  
@@ -147,6 +163,7 @@ class ParticleContainer {
     return sin(angle) * halfHeight + halfHeight;
   }
   
+  
   /**
    * a sinus shaped up slope function  
    * slopeLength is the length of the slope, i.e. at what x value does the slope value hit maxHeight
@@ -170,6 +187,7 @@ class ParticleContainer {
     return sin(angle) * halfHeight + halfHeight;
   }
   
+  
   /**
    * linear down slope
    * slopeLength is the length of the slope, i.e. at what x value does the slope value hit 0
@@ -190,6 +208,7 @@ class ParticleContainer {
     // calculate slopeValue
     return maxHeight - (slopeXpos*maxHeight/slopeLength);
   }
+  
   
   /**
    * quadratic down slope
@@ -212,6 +231,7 @@ class ParticleContainer {
     return maxHeight - (sq(slopeXpos)*maxHeight/sq(slopeLength));
   }
   
+  
   /**
    * linearly decreasing force based on distance (d): force = -d
    * force f at absolute distance d, with max force at d=0 : force = -d+f
@@ -225,17 +245,12 @@ class ParticleContainer {
   }
   
   
+  /**
+   * Repell particle from walls.
+   */
   void bounceParticleOffWalls(Particle p) {
     // distances from walls to particle
     float wallDistance;
-    
-    // if particle is within wall_push_dist, apply a force inversely proportional to the distance
-    // linearly decreasing wallPush effect -> y = -x
-    // if energy is the max contribution when distance is 0 -> y = -x + energy
-    
-    // force intensity = 1/distance
-    // to raise the intensity 
-    //float forceIntensity;
     PVector wallForce;
     
     // cache using local variables for faster access
@@ -246,33 +261,29 @@ class ParticleContainer {
     float xpos = p.pos.x;
     float ypos = p.pos.y;
     float wallPushDistance =  this.wallPushDistance;
+    boolean drawMarker = settings.getBoolean("draw wall markers");
+    int fc = p.fillColor;
     
     // marker style
+    float wallCloseness;
+    float markerThickness;
+    int markerFillColor;
+    
+    // set up drawing
     rectMode(CORNER); // upperleft x, upperleft y, width, height
     colorMode(RGB, 1.0, 1.0, 1.0, 1.0);
-    float wallCloseness;
-    int fc = p.fillColor;
-    int markerFillColor;
-    //fill(p.fillColor);
-    //stroke(p.strokeColor);
     noStroke();
-    
-    // thickness of wall marker
-    //float markerThickness = settings.getFloat("wall marker thickness");
-    float markerThickness;
-    
-    // draw marker?
-    boolean drawMarker = settings.getBoolean("draw wall markers");
     
     // bottom
     wallDistance = abs(this.bottom - ypos);
     if (wallDistance < wallPushDistance) {
       if(drawMarker) {
-        markerThickness = wallDistance-halfSpeedSize;
-        wallCloseness = (wallPushDistance-wallDistance)/wallPushDistance;
+        markerThickness = wallDistance - halfSpeedSize;
+        wallCloseness = (wallPushDistance - wallDistance) / wallPushDistance;
         markerFillColor = color(red(fc), green(fc), blue(fc), wallCloseness);
+
         fill(markerFillColor);
-        rect(xpos-halfSize, this.bottom-markerThickness, markerSize, markerThickness);
+        rect(xpos - halfSize, this.bottom - markerThickness, markerSize, markerThickness);
       }
       wallForce = this.getPushForce(upVector, this.wallEnergy, wallDistance);
       p.vel.add(wallForce);
@@ -282,11 +293,12 @@ class ParticleContainer {
     wallDistance = abs(this.top - ypos);
     if (wallDistance < wallPushDistance) {
       if (drawMarker) {
-        markerThickness = wallDistance-halfSpeedSize;
-        wallCloseness = (wallPushDistance-wallDistance)/wallPushDistance;
+        markerThickness = wallDistance - halfSpeedSize;
+        wallCloseness = (wallPushDistance - wallDistance) / wallPushDistance;
         markerFillColor = color(red(fc), green(fc), blue(fc), wallCloseness);
+
         fill(markerFillColor);
-        rect(xpos-halfSize, this.top, markerSize, markerThickness);
+        rect(xpos - halfSize, this.top, markerSize, markerThickness);
       }
       wallForce = this.getPushForce(downVector, this.wallEnergy, wallDistance);
       p.vel.add(wallForce);
@@ -296,11 +308,12 @@ class ParticleContainer {
     wallDistance = abs(this.left - xpos);
     if (wallDistance < wallPushDistance) {
       if (drawMarker) {
-        markerThickness = wallDistance-halfSpeedSize;
-        wallCloseness = (wallPushDistance-wallDistance)/wallPushDistance;
+        markerThickness = wallDistance - halfSpeedSize;
+        wallCloseness = (wallPushDistance - wallDistance) / wallPushDistance;
+
         markerFillColor = color(red(fc), green(fc), blue(fc), wallCloseness);
         fill(markerFillColor);
-        rect(this.left, ypos-halfSize, markerThickness, markerSize);
+        rect(this.left, ypos - halfSize, markerThickness, markerSize);
       }
       wallForce = this.getPushForce(rightVector, this.wallEnergy, wallDistance);
       p.vel.add(wallForce);
@@ -310,21 +323,19 @@ class ParticleContainer {
     wallDistance = abs(this.right - xpos);
     if (wallDistance <  wallPushDistance) {
       if (drawMarker) {
-        markerThickness = wallDistance-halfSpeedSize;
-        wallCloseness = (wallPushDistance-wallDistance)/wallPushDistance;
+        markerThickness = wallDistance - halfSpeedSize;
+        wallCloseness = (wallPushDistance - wallDistance) / wallPushDistance;
         markerFillColor = color(red(fc), green(fc), blue(fc), wallCloseness);
+
         fill(markerFillColor);
-        rect(this.right-markerThickness, ypos-halfSize, markerThickness, markerSize);
+        rect(this.right - markerThickness, ypos - halfSize, markerThickness, markerSize);
       }
       wallForce = this.getPushForce(leftVector, this.wallEnergy, wallDistance);
       p.vel.add(wallForce);
     }
     
   }
-  
-  PVector calculatePushForce(PVector distanceToTrg, float pushRange, float pushEnergy) {
-    return null;
-  }
+
   
   /**
    * The source particle attracts the target particle.
@@ -341,32 +352,36 @@ class ParticleContainer {
     float distance = attractVector.mag();
     
     float amount = this.linearDownSlope(maxDistance, src.energy, distance);
-    PVector attractForce = PVector.mult(direction, amount);
+    PVector attractForce = PVector.mult(direction, amount * src.attractFactor);
     trg.vel.add(attractForce);
   }
   
-  void repelledByTarget(Particle src, Particle trg, float maxDistance, float repellFactor) {
+  
+  /**
+   * Repell target particle based on source particle energy and repellfactor
+   */
+  void repelledByTarget(Particle src, Particle trg, float maxDistance) {
     // from src away from trg, i.e. to src from trg
     PVector repellVector = PVector.sub(src.pos, trg.pos);
     PVector direction = repellVector.copy().normalize();
     float distance = repellVector.mag();
     
-    float amount = this.quadraticDownSlope(maxDistance, trg.energy*repellFactor, distance);
+    float amount = this.quadraticDownSlope(maxDistance, trg.energy * src.repellFactor, distance);
     PVector attractForce = PVector.mult(direction, amount);
     src.vel.add(attractForce);
   }
   
+  
   /**
-   * Return the tuple (pref_pos, rel_pref_pos).
-   *
-   * - pref_pos is the absolute preferred position for src_p
-   * - rel_pref_pos is the preferred position of src_p, relative to src_p
+   * Return a src particle's preferred position relative to a
+   * target particle and the source particle's preferredDistance 
    */
   PVector calculatePreferredPos(Particle src, Particle trg) {
     PVector toTrgFromSrc = PVector.sub(trg.pos, src.pos);
     PVector direction = toTrgFromSrc.copy().normalize();
     return PVector.mult(direction, src.preferredDistance).add(src.pos);
   }
+  
   
   /**
    * Apply interactions between particles.
@@ -377,10 +392,15 @@ class ParticleContainer {
    * TODO: Dual model where some interactions are:
    *       1) active (particle applies forces to itself) and
    *       2) passive (forces applied by other particles)
+   *
+   * Refactor and only keep attract and repell here. The rest (including visualization)
+   * gets moved to the particle.
    */
   void applyParticleInteractions() {
     for(Particle src : this.particles) {
       for(Particle trg : this.particles) {
+        
+        // neither attracted or repelled by self.
         if(trg == src)
           continue;
 
@@ -388,10 +408,15 @@ class ParticleContainer {
         
         // cache settings etc locally
         float interactionDistance = settings.getFloat("interaction distance");
+        
+        // TODO move preferredDistance stuff to particle
         float preferredDistance = settings.getFloat("preferred distance");
         // distance preferred markers show up
         float preferredReach = settings.getFloat("preferred reach");
 
+        // TODO: I guess this gets modified. Particles should still be able to
+        //       actively react to each other.
+        
         // skip interactions outside of range
         // interaction distance 0 means unlimited interaction, i.e. everything interacts
         // preferredReach is the distance preferred markers start being displayed
@@ -400,24 +425,39 @@ class ParticleContainer {
           continue;
         
         // show interactions?
-        if (settings.getBoolean("draw interactions")) {
-          //colorMode(HSB, 360, 100, 100, 1.0);
-          colorMode(RGB, 1.0, 1.0, 1.0, 1.0);
-          float interactionStr = (interactionDistance-absDist)/interactionDistance*0.4;
+        // TODO: Just leave repell and attract interaction here. the rest goes into Particle
+        if (settings.getBoolean("draw interactions") && absDist < interactionDistance) {
+          colorMode(HSB, 360, 100, 100, 1.0);
+          //colorMode(RGB, 1.0, 1.0, 1.0, 1.0);
+          float interactionStr = (interactionDistance-absDist)/interactionDistance;
+          float brightness = 50;
+          float saturation = 0;
+          int interactionColor;
+          
+          if (bgColor == "white")
+            brightness = 70;
+          else if (bgColor == "black")
+            brightness = 90;
+          interactionColor = color((hue(src.strokeColor)+hue(trg.strokeColor))/2,
+                                   (saturation(src.strokeColor)+saturation(trg.strokeColor))/2,
+                                   //(brightness(src.strokeColor)+brightness(trg.strokeColor))/2,
+                                   brightness,
+                                   interactionStr);
+          interactionColor = color(180, saturation, brightness, interactionStr);
+          //interactionColor = color(360, 100, 100, 1);
+          
           /*
-          int interactionColor = color((hue(src.strokeColor)+hue(trg.strokeColor))/2,
-                                       (saturation(src.strokeColor)+saturation(trg.strokeColor))/2,
-                                       (brightness(src.strokeColor)+brightness(trg.strokeColor))/2,
-                                       interactionStr);
-          */
           int interactionColor = color((red(src.strokeColor)+red(trg.strokeColor))/2,
                                        (green(src.strokeColor)+green(trg.strokeColor))/2,
                                        (blue(src.strokeColor)+blue(trg.strokeColor))/2,
                                        interactionStr);
+          */
           stroke(interactionColor);
           line(src.pos.x, src.pos.y, trg.pos.x, trg.pos.y);
+          //line(width/2, 0, width/2, height);
         }
         
+        // TODO: This also goes into particle
         if (settings.getBoolean("draw preferred distance")) {
           PVector preferredPos = this.calculatePreferredPos(src, trg);
           colorMode(RGB, 1.0, 1.0, 1.0, 1.0);
@@ -443,35 +483,21 @@ class ParticleContainer {
           line(preferredPos.x, preferredPos.y, src.pos.x, src.pos.y);
         }
         
+        // TODO: Basically its this that is left here in the ParticleContainer.
+        
         // Each particle attracts all other particles. One at the time.
         if (settings.getBoolean("apply attraction"))
           this.attractTarget(src, trg, interactionDistance);
         
         // Each particle wants its own space. Is repelled by one target at the time.
         if (settings.getBoolean("apply repell"))
-          this.repelledByTarget(src, trg, preferredDistance, settings.getFloat("repell factor"));
+          this.repelledByTarget(src, trg, preferredDistance);
         
-        /* To be implemented later
-        // used later for keeping track of if we are to hunt or flee
-        boolean fleeFromTrg = false;
-        
-        // distance towards trg from src, i.e. the vector points towards trg from src
-        PVector srcToTrg = PVector.sub(trg.pos, src.pos);
-        
-        // distance pointing away from trg, i.e. the vector points towards src from trg
-        PVector srcAwayFromTrg = PVector.sub(src.pos, trg.pos);
-        
-        // decide to hunt or flee
-        // TODO
-        
-        // coordinates (as vector) of preferredPosition relative trg 
-        PVector preferredPos = this.calculatePreferredPos(src, trg);
-
-        // required change in position of src to reach the preferred position
-        // i.e. to preferred position from src position.
-        PVector travelVector = PVector.sub(preferredPos, src.pos);
+        /*
+        TODO: For each src/trg particle pair, send the trg particle to the
+              src particle and let it decide what it wants to do.
         */
-        
+
       }
     }
   }
