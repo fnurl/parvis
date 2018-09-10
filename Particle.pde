@@ -54,9 +54,13 @@ class Particle {
 
     // colors
     colorMode(HSB, 360, 100, 100, 100);
-    //this.fillColor = color(random(0,360), 73, 78, 60);
-    float hue = idCounter/settings.getFloat("number of particles")*360;
-    this.fillColor = color(hue, 80, 80, 60);
+    float randomHue = random(0, 360);
+    float randomSaturation = random(10, 70);
+    float randomBrightness = random(40, 100);
+    //float hue = idCounter/settings.getFloat("number of particles")*360;
+    //this.fillColor = color(randomHue, 80, 80, 90);
+    this.fillColor = color(300, randomSaturation, 90, 90);
+    //this.fillColor = color(180, 50, randomBrightness, 90);
     //this.fillColor = color(0, 100, 100, 100);
     this.strokeColor = color(hue(this.fillColor),
                              saturation(this.fillColor),
@@ -64,7 +68,46 @@ class Particle {
                              0,
                              80);
   }
+
+  /**
+   * Return a src particle's preferred position relative to a
+   * target particle and the source particle's preferredDistance 
+   */
+  PVector calculatePreferredPos(Particle trg) {
+    PVector toTrgFromSrc = PVector.sub(trg.pos, this.pos);
+    PVector direction = toTrgFromSrc.copy().normalize();
+    return PVector.mult(direction, this.preferredDistance).add(this.pos);
+  }
   
+  // this is where the particle decides how to interact with other particles
+  void interactWith(Particle trg) {
+    if (settings.getBoolean("draw preferred distance")) {
+      PVector preferredPos = this.calculatePreferredPos(trg);
+      colorMode(RGB, 1.0, 1.0, 1.0, 1.0);
+      float absDist = this.pos.dist(trg.pos);
+      float preferredReach = settings.getFloat("preferred reach");
+      float transparency = (preferredReach-absDist)/preferredReach*0.6;
+      int strokeColor = color(red(trg.strokeColor),
+                              green(trg.strokeColor),
+                              blue(trg.strokeColor),
+                              transparency);
+      int fillColor = color(red(trg.fillColor),
+                            green(trg.fillColor),
+                            blue(trg.fillColor),
+                            transparency);
+
+      strokeWeight(2);
+      stroke(fillColor);
+      line(preferredPos.x, preferredPos.y, this.pos.x, this.pos.y);
+      float prefMarkerSize = settings.getFloat("preferred marker size");
+
+      fill(fillColor);
+      noStroke();
+      ellipseMode(CENTER);
+      ellipse(preferredPos.x, preferredPos.y, prefMarkerSize, prefMarkerSize);
+    }
+  }
+
   void applyAcceleration() {
     this.vel.add(acc);
     this.acc = this.acc.mult(settings.getFloat("acceleration decay"));
@@ -76,7 +119,12 @@ class Particle {
 
   void updateSpeedSize() {
     //this.speedSize = this.vel.mag() * settings.getFloat("speed magnification") + this.size;
-    this.speedSize = this.size - (this.vel.mag() * settings.getFloat("speed magnification"));
+    if (settings.getBoolean("draw speedsize")) {
+      this.speedSize = settings.getFloat("particle size") -
+                       (this.vel.mag() * settings.getFloat("speed magnification"));
+    } else {
+      this.speedSize = settings.getFloat("particle size");
+    }
   }
 
   void update() {
@@ -86,19 +134,27 @@ class Particle {
   }
 
   void draw() {
-    fill(this.fillColor);
-    stroke(this.strokeColor);
-    strokeWeight(2);
     
     // body
-    ellipseMode(CENTER);
-    ellipse(this.pos.x, this.pos.y, this.speedSize, this.speedSize);
+    if (settings.getBoolean("draw particles")) {
+      fill(this.fillColor);
+      strokeWeight(1);
+      //stroke(this.strokeColor);
+      noStroke();
+      ellipseMode(CENTER);
+      ellipse(this.pos.x, this.pos.y, this.speedSize, this.speedSize);
+    }
     
     // velocity line
     float lineScale = settings.getFloat("velocity line scale");
     if (settings.getBoolean("draw velocity line")) {
+      stroke(this.strokeColor);
+      strokeWeight(2);
+      PVector velocityLine = PVector.mult(this.vel, -1);
+      //line(this.pos.x, this.pos.y,
+      //     this.pos.x + this.vel.x*lineScale, this.pos.y + this.vel.y*lineScale);
       line(this.pos.x, this.pos.y,
-           this.pos.x + this.vel.x*lineScale, this.pos.y + this.vel.y*lineScale);
+           this.pos.x + velocityLine.x*lineScale, this.pos.y + velocityLine.y*lineScale);
     }
 
     // acceleration line

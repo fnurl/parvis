@@ -13,7 +13,7 @@ final static int INFO = 2;
 final static int DEBUG = 3;
 final static int DEBUG_VERBOSE = 4;
 
-final static int LOGLEVEL = 4;
+final static int LOGLEVEL = INFO;
 
 JSONObject settings;
 int idCounter;
@@ -25,8 +25,12 @@ StringBuilder helpText;
 // some colors
 HashMap<String,Integer> colors;
 String bgColor;
-final int inactiveAlpha = 64;
-final int activeAlpha = 186;
+String textColor;
+final int inactiveAlpha = 128;
+final int activeAlpha = 192;
+
+// font
+PFont font;
 
 // UI
 GUIContainer guiContainer;
@@ -144,35 +148,48 @@ void setup() {
 
   // load color settings
   bgColor = settings.getString("background");
-  background(colors.get(bgColor));
-  
+  textColor = settings.getString("text color");
+ 
+  // font
+  logMsg(INFO, "Loading font.");
+  //String[] fontList = PFont.list();
+  //printArray(fontList);
+  font = createFont("FantasqueSansMono-Regular", 14, true);
+  textFont(font, 15);
+
   // keybindings
   logMsg(INFO, "Binding keys.");
   keybindings = new HashMap<Character,String>();
   keybindings.put('a', "apply attraction");
-  keybindings.put('i', "draw interactions");
-  keybindings.put('h', "show help");
-  keybindings.put('l', "limit velocity");
-  keybindings.put('m', "draw wall markers");
-  keybindings.put('n', "show info");
-  keybindings.put('p', "draw preferred distance");
   keybindings.put('r', "apply repell");
-  keybindings.put('s', "use shaders");
-  keybindings.put('u', "show ui");
-  keybindings.put('v', "draw velocity line");
+  keybindings.put('l', "limit velocity");
   keybindings.put('w', "wrap around");
+  keybindings.put('t', "draw attracts");
+  keybindings.put('e', "draw repells");
+  keybindings.put('p', "draw preferred distance");
+  keybindings.put('i', "draw particles");
+  keybindings.put('m', "draw wall markers");
+  keybindings.put('v', "draw velocity line");
+  keybindings.put('z', "draw speedsize");
+  keybindings.put('u', "show ui");
+  keybindings.put('n', "show info");
+  keybindings.put('h', "show help");
+  keybindings.put('s', "use shaders");
   
   // UI
   logMsg(INFO, "Initializing GUI.");
   guiContainer = new GUIContainer();
   guiContainer.addSettingSlider("friction", 5);
-  guiContainer.addSettingSlider("interaction distance", 0);
-  guiContainer.addSettingSlider("preferred reach", 0);
-  guiContainer.addSettingSlider("preferred distance", 0);
-  guiContainer.addSettingSlider("particle energy", 2);
-  guiContainer.addSettingSlider("repell factor", 0);
-  guiContainer.addSettingSlider("attract factor", 0);
   guiContainer.addSettingSlider("velocity limit", 0);
+  guiContainer.addSettingSlider("particle energy", 2);
+  guiContainer.addSettingSlider("attract distance", 0);
+  guiContainer.addSettingSlider("attract factor", 0);
+  guiContainer.addSettingSlider("repell distance", 0);
+  guiContainer.addSettingSlider("repell factor", 0);
+  //guiContainer.addSettingSlider("preferred reach", 0);
+  guiContainer.addSettingSlider("particle size", 0);
+  guiContainer.addSettingSlider("speed magnification", 0);
+  guiContainer.addSettingSlider("velocity line scale", 0);
 
   logMsg(INFO, "Creating particles.");
   // particle container
@@ -188,7 +205,7 @@ void setup() {
 }
 
 void keyPressed() {
-  logMsg(DEBUG, "key pressed: " + key);
+  logMsg(INFO, "key pressed: " + key);
   boolean boolSetting;
   String settingName;
 
@@ -201,10 +218,12 @@ void keyPressed() {
   
   // non-boolean toggle keybindings
   if (key == 'b') {
-    if (bgColor == "white") {
+    if (bgColor.equals("white")) {
       bgColor = "black";
+      textColor = "white";
     } else {
       bgColor = "white";
+      textColor = "black";
     }
   } else if (key == 'c') {
     particleContainer.createAndAddParticle();
@@ -229,9 +248,10 @@ void showHelp() {
     helpText.append("d - delete a random particle\n");
   }
 
-  textSize(16);
+  //textSize(14);
+  //textFont(font, 14);
   textAlign(LEFT, TOP);
-  fill(colors.get("black"));
+  fill(colors.get(textColor));
   rectMode(CORNER);
   text(helpText.toString(), 20, 20, 400, height-20);
 }
@@ -242,23 +262,29 @@ void showInfo() {
     infoText.append(keybindings.get(keyBinding));
     infoText.append(": ");
     if (settings.getBoolean(keybindings.get(keyBinding))) {
-      infoText.append(" ON\n");
+      infoText.append(" *\n");
     } else {
-      infoText.append(" OFF\n");
+      infoText.append("  \n");
     }
   }
+  //infoText.append("background: ");
+  //infoText.append(bgColor);
+  //infoText.append("\n");
+  infoText.append("#particles: ");
+  infoText.append(String.valueOf(particleContainer.getNumberOfParticles()));
+  infoText.append("\n");
 
   int boxWidth = 300;
   int boxMargin = 20;
-  textSize(14);
+  //textSize(14);
+  //textFont(font, 14);
   textAlign(RIGHT, TOP);
-  fill(colors.get("black"));
+  fill(colors.get(textColor));
   rectMode(CORNER);
   text(infoText.toString(), width-boxMargin-boxWidth, boxMargin, boxWidth, height-boxMargin);
 }
 
 void draw() {
-  //if (frameCount % 10 == 0)
   background(colors.get(bgColor));
   particleContainer.updateAndDraw();
   

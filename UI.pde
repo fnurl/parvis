@@ -226,7 +226,7 @@ class Slider extends GUIComponent {
 
     // then set value taking minValue into account
     this.value = relValue + this.minValue;
-    logMsg(DEBUG, "value updated from markerPos. value: " + this.value + ". markerPos: " + this.markerPos);
+    logMsg(DEBUG_VERBOSE, "value updated from markerPos. value: " + this.value + ". markerPos: " + this.markerPos);
     this.valueChanged();
   }
 

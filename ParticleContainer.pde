@@ -56,7 +56,10 @@ class ParticleContainer {
     }
   }
 
-  
+  int getNumberOfParticles() {
+    return this.particles.size();
+  }
+
   void updateAndDraw() {
     // let particles interact with each other (no positions updated, just their velocities)
     this.applyParticleInteractions();
@@ -355,33 +358,26 @@ class ParticleContainer {
     PVector direction = attractVector.copy().normalize();
     float distance = attractVector.mag();
     
-    float amount = this.linearDownSlope(maxDistance, src.energy, distance);
-    PVector attractForce = PVector.mult(direction, amount * src.attractFactor);
+    float amount = this.linearDownSlope(maxDistance, settings.getFloat("particle energy"), distance);
+    PVector attractForce = PVector.mult(direction, amount * settings.getFloat("attract factor"));
     trg.vel.add(attractForce);
   }
   
   /**
    * Repell target particle based on source particle energy and repellfactor
    */
-  void repelledByTarget(Particle src, Particle trg, float maxDistance) {
-    // from src away from trg, i.e. to src from trg
-    PVector repellVector = PVector.sub(src.pos, trg.pos);
+  void repellTarget(Particle src, Particle trg, float maxDistance) {
+    // to trg from src
+    PVector repellVector = PVector.sub(trg.pos, src.pos);
     PVector direction = repellVector.copy().normalize();
     float distance = repellVector.mag();
     
-    float amount = this.quadraticDownSlope(maxDistance, trg.energy * src.repellFactor, distance);
-    PVector attractForce = PVector.mult(direction, amount);
-    src.vel.add(attractForce);
-  }
-  
-  /**
-   * Return a src particle's preferred position relative to a
-   * target particle and the source particle's preferredDistance 
-   */
-  PVector calculatePreferredPos(Particle src, Particle trg) {
-    PVector toTrgFromSrc = PVector.sub(trg.pos, src.pos);
-    PVector direction = toTrgFromSrc.copy().normalize();
-    return PVector.mult(direction, src.preferredDistance).add(src.pos);
+    float amount = this.quadraticDownSlope(maxDistance,
+                                           settings.getFloat("particle energy") *
+                                           settings.getFloat("repell factor"),
+                                           distance);
+    PVector repellForce = PVector.mult(direction, amount * settings.getFloat("repell factor"));
+    trg.vel.add(repellForce);
   }
   
   /**
@@ -390,14 +386,16 @@ class ParticleContainer {
    * The current model for interactions is that each particle only moves
    * itself.
    *   
-   * TODO: Dual model where some interactions are:
-   *       1) active (particle applies forces to itself) and
-   *       2) passive (forces applied by other particles)
-   *
-   * Refactor and only keep attract and repell here. The rest (including visualization)
-   * gets moved to the particle.
+   * Dual model where some interactions are:
+   *  1) active (particle applies forces to itself) TODO
+   *  2) passive (forces applied by other particles) DONE!
    */
   void applyParticleInteractions() {
+
+    // cache settings locally
+    float attractDistance = settings.getFloat("attract distance");
+    float repellDistance = settings.getFloat("repell distance");
+
     for(Particle src : this.particles) {
       for(Particle trg : this.particles) {
         
@@ -407,101 +405,42 @@ class ParticleContainer {
 
         float absDist = src.pos.dist(trg.pos);
         
-        // cache settings etc locally
-        float interactionDistance = settings.getFloat("interaction distance");
-        float repellDistance = settings.getFloat("repell distance");
+        // process attract/repell within range
+        if (absDist <= attractDistance || absDist <= repellDistance) {
         
-        // TODO move preferredDistance stuff to particle
-        float preferredDistance = settings.getFloat("preferred distance");
-        // distance preferred markers show up
-        float preferredReach = settings.getFloat("preferred reach");
-
-        // TODO: I guess this gets modified. Particles should still be able to
-        //       actively react to each other.
+          // show repells
+          if (settings.getBoolean("draw repells") && absDist <= repellDistance) {
+            colorMode(RGB);
+            float repellStr = 255 * (repellDistance-absDist)/repellDistance;
+            int repellColor = modifyAlpha(colors.get("dark red"), int(repellStr));
+            //int repellColor = colors.get("dark red");
+            stroke(repellColor);
+            strokeWeight(3);
+            line(src.pos.x, src.pos.y, trg.pos.x, trg.pos.y);
+          }
         
-        // skip interactions outside of range
-        // interaction distance 0 means unlimited interaction, i.e. everything interacts
-        // preferredReach is the distance preferred markers start being displayed
-        // don't skip src/trg pair if absDist is within either interactionDistance or preferredReach
-        if (interactionDistance > 0 &&
-            absDist > interactionDistance &&
-            absDist > preferredReach &&
-            absDist > repellDistance)
-          continue;
+          // show attracts
+          if (settings.getBoolean("draw attracts") && absDist <= attractDistance) {
+            colorMode(RGB);
+            float attractStr = 255 * (attractDistance-absDist)/attractDistance;
+            int attractColor = modifyAlpha(colors.get("dark green"), int(attractStr));
+            //int attractColor = colors.get("dark green");
+            stroke(attractColor);
+            strokeWeight(1);
+            line(src.pos.x, src.pos.y, trg.pos.x, trg.pos.y);
+          }
         
-        // show interactions?
-        // TODO: Just leave repell and attract interaction here. the rest goes into Particle
-        if (settings.getBoolean("draw interactions") && absDist < interactionDistance) {
-          colorMode(HSB, 360, 100, 100, 1.0);
-          //colorMode(RGB, 1.0, 1.0, 1.0, 1.0);
-          float interactionStr = (interactionDistance-absDist)/interactionDistance;
-          float brightness = 50;
-          float saturation = 0;
-          int interactionColor;
+          // Each particle attracts all other particles. One at the time.
+          if (settings.getBoolean("apply attraction"))
+            this.attractTarget(src, trg, attractDistance);
           
-          if (bgColor == "white")
-            brightness = 70;
-          else if (bgColor == "black")
-            brightness = 90;
-          interactionColor = color((hue(src.strokeColor)+hue(trg.strokeColor))/2,
-                                   (saturation(src.strokeColor)+saturation(trg.strokeColor))/2,
-                                   //(brightness(src.strokeColor)+brightness(trg.strokeColor))/2,
-                                   brightness,
-                                   interactionStr);
-          interactionColor = color(180, saturation, brightness, interactionStr);
-          //interactionColor = color(360, 100, 100, 1);
-          
-          /*
-          int interactionColor = color((red(src.strokeColor)+red(trg.strokeColor))/2,
-                                       (green(src.strokeColor)+green(trg.strokeColor))/2,
-                                       (blue(src.strokeColor)+blue(trg.strokeColor))/2,
-                                       interactionStr);
-          */
-          stroke(interactionColor);
-          strokeWeight(1);
-          line(src.pos.x, src.pos.y, trg.pos.x, trg.pos.y);
+          // Each particle wants its own space. Is repelled by one target at the time.
+          if (settings.getBoolean("apply repell"))
+            this.repellTarget(src, trg, repellDistance);
         }
-        
-        // TODO: This also goes into particle
-        if (settings.getBoolean("draw preferred distance")) {
-          PVector preferredPos = this.calculatePreferredPos(src, trg);
-          colorMode(RGB, 1.0, 1.0, 1.0, 1.0);
-          float transparency = (preferredReach-absDist)/preferredReach*0.6;
-          int strokeColor = color(red(trg.strokeColor),
-                                  green(trg.strokeColor),
-                                  blue(trg.strokeColor),
-                                  transparency);
-          int fillColor = color(red(trg.fillColor),
-                                green(trg.fillColor),
-                                blue(trg.fillColor),
-                                transparency);
-
-          float prefMarkerSize = settings.getFloat("preferred marker size");
-          fill(fillColor);
-          //stroke(strokeColor);
-          noStroke();
-          ellipseMode(CENTER);
-          ellipse(preferredPos.x, preferredPos.y, prefMarkerSize, prefMarkerSize);
-          strokeWeight(2);
-          stroke(fillColor);
-          line(preferredPos.x, preferredPos.y, src.pos.x, src.pos.y);
-        }
-        
-        // TODO: Basically its this that is left here in the ParticleContainer.
-        
-        // Each particle attracts all other particles. One at the time.
-        if (settings.getBoolean("apply attraction"))
-          this.attractTarget(src, trg, interactionDistance);
-        
-        // Each particle wants its own space. Is repelled by one target at the time.
-        if (settings.getBoolean("apply repell"))
-          //this.repelledByTarget(src, trg, preferredDistance);
-          this.repelledByTarget(src, trg, interactionDistance);
-        
-        /*
-        TODO: For each src/trg particle pair, send the trg particle to the
-              src particle and let it decide what it wants to do.
-        */
+       
+        // particle initiated interaction
+        src.interactWith(trg);
 
       }
     }

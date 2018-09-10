@@ -1,12 +1,13 @@
 {
     "show ui": false,
-    "show help": true,
+    "show help": false,
     "show info": false,
-    "use shaders": false,
+    "use shaders": true,
     "high contrast": false,
 
-    "number of particles": 30,
+    "number of particles": 15,
     "background": "white",
+    "text color": "black",
 
     "wrap around": false,
     "limit velocity": true,
@@ -15,23 +16,33 @@
     "apply friction": true,
     "apply gravity": false,
 
-    "max velocity limit": 20,
-    "min velocity limit": 2,
-    "velocity limit": 5,
-
-    "acceleration decay": 0.95,
-
     "max friction": 0.005,
     "min friction": 0.00001,
     "friction": 0.0001,
 
-    "max interaction distance": 600,
-    "min interaction distance": 100,
-    "interaction distance": 200,
+    "max velocity limit": 20,
+    "min velocity limit": 2,
+    "velocity limit": 5,
+
+    "max particle energy": 2,
+    "min particle energy": 0.01,
+    "particle energy": 0.1,
+
+    "max attract distance": 600,
+    "min attract distance": 100,
+    "attract distance": 250,
+
+    "max attract factor": 30,
+    "min attract factor": 1,
+    "attract factor": 1,
 
     "max repell distance": 600,
     "min repell distance": 50,
-    "repell distance": 100,
+    "repell distance": 125,
+
+    "max repell factor": 30,
+    "min repell factor": 1,
+    "repell factor": 2,
 
     "wall energy": 10,
     "wall push distance": 100,
@@ -39,12 +50,26 @@
     "wall marker thickness": 5,
 
     "draw wall markers": true,
-    "draw preferred distance": true,
-    "draw interactions": false,
+    "draw preferred distance": false,
+    "draw attracts": true,
+    "draw repells": true,
+    "draw speedsize": false,
+    "draw particles": true,
 
-    "particle size": 50,
+    "max particle size": 50,
+    "min particle size": 5,
+    "particle size": 30,
+
+    "acceleration decay": 0.95,
+
     "preferred marker size": 5,
+
+    "max speed magnification": 16,
+    "min speed magnification": 4,
     "speed magnification": 8,
+
+    "max velocity line scale": 15,
+    "min velocity line scale": 1,
     "velocity line scale": 10,
 
     "max preferred reach": 800,
@@ -54,18 +79,6 @@
     "max preferred distance": 600,
     "min preferred distance": 100,
     "preferred distance": 100,
-
-    "max particle energy": 5,
-    "min particle energy": 0.01,
-    "particle energy": 0.1,
-
-    "max repell factor": 50,
-    "min repell factor": 1,
-    "repell factor": 10,
-
-    "max attract factor": 10,
-    "min attract factor": 1,
-    "attract factor": 1,
 
     "draw acceleration line": false,
     "draw velocity line": false
