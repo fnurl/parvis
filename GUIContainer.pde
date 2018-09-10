@@ -3,15 +3,33 @@ import java.util.List;
 class GUIContainer {
   
   ArrayList<GUIComponent> components;
+  int sliderHeight;
+  int sliderMargin;
+  int nextSliderXpos;
   
   GUIContainer() {
     this.components = new ArrayList();
+
+    // setting sliders
+    this.sliderHeight = 200;
+    this.sliderMargin = 20;
+    this.nextSliderXpos = this.sliderMargin;
   }
   
   void add(GUIComponent component) {
     this.components.add(component);
   }
-  
+
+  // create and return a setting slider (in case more customization is needed)
+  SettingSlider addSettingSlider(String settingKey, int precision) {
+    SettingSlider settingSlider = new SettingSlider(settingKey, this.sliderHeight, precision);
+    settingSlider.pos.x = this.nextSliderXpos;
+    settingSlider.pos.y = height - this.sliderMargin - this.sliderHeight;
+    this.nextSliderXpos += this.sliderMargin + settingSlider.getComponentWidth();
+    this.add(settingSlider);
+    return settingSlider;
+  }
+
   /**
    * Update all GUI components.
    * Track all mouse input and fire component events as needed:

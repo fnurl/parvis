@@ -1,7 +1,10 @@
 {
-    "show ui": true,
+    "show ui": false,
+    "show help": true,
+    "show info": false,
     "use shaders": false,
     "high contrast": false,
+
     "number of particles": 30,
     "background": "white",
 
@@ -12,12 +15,23 @@
     "apply friction": true,
     "apply gravity": false,
 
+    "max velocity limit": 20,
+    "min velocity limit": 2,
     "velocity limit": 5,
+
     "acceleration decay": 0.95,
+
     "max friction": 0.005,
     "min friction": 0.00001,
     "friction": 0.0001,
+
+    "max interaction distance": 600,
+    "min interaction distance": 100,
     "interaction distance": 200,
+
+    "max repell distance": 600,
+    "min repell distance": 50,
+    "repell distance": 100,
 
     "wall energy": 10,
     "wall push distance": 100,
@@ -32,11 +46,27 @@
     "preferred marker size": 5,
     "speed magnification": 8,
     "velocity line scale": 10,
+
+    "max preferred reach": 800,
+    "min preferred reach": 100,
     "preferred reach": 400,
+
+    "max preferred distance": 600,
+    "min preferred distance": 100,
     "preferred distance": 100,
+
+    "max particle energy": 5,
+    "min particle energy": 0.01,
     "particle energy": 0.1,
+
+    "max repell factor": 50,
+    "min repell factor": 1,
     "repell factor": 10,
+
+    "max attract factor": 10,
+    "min attract factor": 1,
     "attract factor": 1,
+
     "draw acceleration line": false,
     "draw velocity line": false
 

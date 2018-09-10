@@ -26,7 +26,6 @@ class ParticleContainer {
     this.initWithDefaults();
   }
 
-
   void initWithDefaults() {
     this.gravity = new PVector(0, 0);
     
@@ -36,11 +35,27 @@ class ParticleContainer {
     this.wallPadding = settings.getInt("wall padding");
   }
   
-  
   void addParticle(Particle particle) {
     this.particles.add(particle);
   }
-  
+
+  // create, add and return new Particle (for further customization)
+  Particle createAndAddParticle() {
+    Particle particle = new Particle();
+    this.particles.add(particle);
+    logMsg(DEBUG_VERBOSE, "Created particle.");
+    return particle;
+  }
+
+  void removeRandomParticle() {
+    int numParticles = this.particles.size();
+    if (numParticles > 0) {
+      //this.particles.remove(random(0, numParticles));
+      this.particles.remove(0);
+      logMsg(DEBUG_VERBOSE, "Deleted particle.");
+    }
+  }
+
   
   void updateAndDraw() {
     // let particles interact with each other (no positions updated, just their velocities)
@@ -94,7 +109,6 @@ class ParticleContainer {
     }
   }
   
-  
   /**
    * Prevent particle from leaving the container bounds.
    */
@@ -112,7 +126,6 @@ class ParticleContainer {
     }
   }
 
-  
   /**
    * Reduce the velocity of a particle by a percentage (friction)
    * stored in settings.
@@ -122,14 +135,12 @@ class ParticleContainer {
     p.vel = PVector.sub(p.vel, frictionForce);
   }
   
-  
   /**
    * Add gravitational force to particel velocity
    */
   void applyGravity(Particle p) {
     p.vel.add(this.gravity);
   }
-  
   
   /**
    * Limit a particles velocity.
@@ -138,7 +149,6 @@ class ParticleContainer {
   void limitParticleVelocity(Particle p) {
     p.vel.limit(settings.getFloat("velocity limit"));
   }
-
 
   /**
    * a sinus shaped down slope function  
@@ -163,7 +173,6 @@ class ParticleContainer {
     return sin(angle) * halfHeight + halfHeight;
   }
   
-  
   /**
    * a sinus shaped up slope function  
    * slopeLength is the length of the slope, i.e. at what x value does the slope value hit maxHeight
@@ -187,7 +196,6 @@ class ParticleContainer {
     return sin(angle) * halfHeight + halfHeight;
   }
   
-  
   /**
    * linear down slope
    * slopeLength is the length of the slope, i.e. at what x value does the slope value hit 0
@@ -208,7 +216,6 @@ class ParticleContainer {
     // calculate slopeValue
     return maxHeight - (slopeXpos*maxHeight/slopeLength);
   }
-  
   
   /**
    * quadratic down slope
@@ -231,7 +238,6 @@ class ParticleContainer {
     return maxHeight - (sq(slopeXpos)*maxHeight/sq(slopeLength));
   }
   
-  
   /**
    * linearly decreasing force based on distance (d): force = -d
    * force f at absolute distance d, with max force at d=0 : force = -d+f
@@ -243,7 +249,6 @@ class ParticleContainer {
     float force = this.linearDownSlope(this.wallPushDistance, this.wallEnergy, distance);
     return PVector.mult(direction, force); 
   }
-  
   
   /**
    * Repell particle from walls.
@@ -336,7 +341,6 @@ class ParticleContainer {
     
   }
 
-  
   /**
    * The source particle attracts the target particle.
    *
@@ -356,7 +360,6 @@ class ParticleContainer {
     trg.vel.add(attractForce);
   }
   
-  
   /**
    * Repell target particle based on source particle energy and repellfactor
    */
@@ -371,7 +374,6 @@ class ParticleContainer {
     src.vel.add(attractForce);
   }
   
-  
   /**
    * Return a src particle's preferred position relative to a
    * target particle and the source particle's preferredDistance 
@@ -381,7 +383,6 @@ class ParticleContainer {
     PVector direction = toTrgFromSrc.copy().normalize();
     return PVector.mult(direction, src.preferredDistance).add(src.pos);
   }
-  
   
   /**
    * Apply interactions between particles.
@@ -408,6 +409,7 @@ class ParticleContainer {
         
         // cache settings etc locally
         float interactionDistance = settings.getFloat("interaction distance");
+        float repellDistance = settings.getFloat("repell distance");
         
         // TODO move preferredDistance stuff to particle
         float preferredDistance = settings.getFloat("preferred distance");
@@ -421,7 +423,10 @@ class ParticleContainer {
         // interaction distance 0 means unlimited interaction, i.e. everything interacts
         // preferredReach is the distance preferred markers start being displayed
         // don't skip src/trg pair if absDist is within either interactionDistance or preferredReach
-        if (interactionDistance > 0 && absDist > interactionDistance && absDist > preferredReach)
+        if (interactionDistance > 0 &&
+            absDist > interactionDistance &&
+            absDist > preferredReach &&
+            absDist > repellDistance)
           continue;
         
         // show interactions?
@@ -453,8 +458,8 @@ class ParticleContainer {
                                        interactionStr);
           */
           stroke(interactionColor);
+          strokeWeight(1);
           line(src.pos.x, src.pos.y, trg.pos.x, trg.pos.y);
-          //line(width/2, 0, width/2, height);
         }
         
         // TODO: This also goes into particle
@@ -477,9 +482,8 @@ class ParticleContainer {
           noStroke();
           ellipseMode(CENTER);
           ellipse(preferredPos.x, preferredPos.y, prefMarkerSize, prefMarkerSize);
-          //ellipse(preferredPos.x+random(-2,2), preferredPos.y+random(-2,2), prefMarkerSize, prefMarkerSize);
+          strokeWeight(2);
           stroke(fillColor);
-          //line(preferredPos.x+random(-5,5), preferredPos.y+random(-5,5), src.pos.x, src.pos.y);
           line(preferredPos.x, preferredPos.y, src.pos.x, src.pos.y);
         }
         
@@ -491,7 +495,8 @@ class ParticleContainer {
         
         // Each particle wants its own space. Is repelled by one target at the time.
         if (settings.getBoolean("apply repell"))
-          this.repelledByTarget(src, trg, preferredDistance);
+          //this.repelledByTarget(src, trg, preferredDistance);
+          this.repelledByTarget(src, trg, interactionDistance);
         
         /*
         TODO: For each src/trg particle pair, send the trg particle to the
@@ -503,7 +508,3 @@ class ParticleContainer {
   }
 }
 
-/*
-
-
-*/

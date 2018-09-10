@@ -88,6 +88,7 @@ class Particle {
   void draw() {
     fill(this.fillColor);
     stroke(this.strokeColor);
+    strokeWeight(2);
     
     // body
     ellipseMode(CENTER);

@@ -10,6 +10,7 @@ class GUIComponent {
   PGraphics label;
   String labelText;
   int labelHeight;
+  int labelPadding;
   boolean visible;
   
   int mousePressedX;
@@ -133,9 +134,9 @@ class Slider extends GUIComponent {
   float value;
   float minValue;
   float maxValue;
-  float valueScopeSize;  // number of values slider can represent
-  float markerPos2ValueFactor;   // factor to multiply markerPos with to scale to possible values
-  float value2markerPosFactor;   // factor to multiply value with to scale to possible markerPos:es
+  float valueScopeSize;         // number of values slider can represent
+  float markerPos2ValueFactor;  // factor to multiply markerPos with to scale to possible values
+  float value2markerPosFactor;  // factor to multiply value with to scale to possible markerPos:es
   float sliderLength;
   float sliderMin;
 
@@ -164,7 +165,8 @@ class Slider extends GUIComponent {
     this.value2markerPosFactor = this.sliderLength / this.valueScopeSize;  // scale value to sliderLength
 
     // label
-    this.labelHeight = 10;
+    this.labelHeight = 14;
+    this.labelPadding = 1;
     this.labelText = "Slider";
 
     // draggable marker 
@@ -293,12 +295,15 @@ class Slider extends GUIComponent {
     g.endDraw();    
 
     // draw label
+    // TODO: center label vertically
     g = this.label;
     g.beginDraw();
     g.background(this.labelBgColor);
     g.fill(this.labelTextColor);
-    g.textSize(this.labelHeight);
-    g.text(this.getLabelDisplayText(), 0, this.labelHeight);
+    g.textSize(this.labelHeight-this.labelPadding*2);
+    g.textAlign(LEFT, TOP);
+    g.rectMode(CORNER);
+    g.text(this.getLabelDisplayText(), this.labelPadding, this.labelPadding);
     g.endDraw();
 
     // save current coordinate system
@@ -331,10 +336,13 @@ class SettingSlider extends Slider {
   String settingKey;
   int precision;
 
-  SettingSlider(String name, String settingKey, int size, float minValue, float maxValue, int precision) {
-    super(size, minValue, maxValue, settings.getFloat(settingKey));
+  SettingSlider(String settingKey, int size, int precision) {
+    super(size,
+          settings.getFloat("min " + settingKey),
+          settings.getFloat("max " + settingKey),
+          settings.getFloat(settingKey));
     this.settingKey = settingKey;
-    this.labelText = name;
+    this.labelText = settingKey;
     this.precision = precision;
   }
 

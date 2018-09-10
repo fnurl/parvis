@@ -12,13 +12,15 @@ final static int ERRORS = 1;
 final static int INFO = 2;
 final static int DEBUG = 3;
 final static int DEBUG_VERBOSE = 4;
-final static int LOGLEVEL = DEBUG;
+
+final static int LOGLEVEL = 4;
 
 JSONObject settings;
 int idCounter;
 
-// keyboard controlls
+// keyboard controls
 HashMap<Character,String> keybindings;
+StringBuilder helpText;
 
 // some colors
 HashMap<String,Integer> colors;
@@ -54,13 +56,16 @@ static int modifyAlpha(int colorValue, int newAlpha) {
 }
 
 void setup() {
+  logMsg(INFO, "Loading settings.");
   settings = loadJSONObject("settings.json");
   //size(800, 600);
   //fullScreen(P2D);
+  logMsg(INFO, "Initializing graphics.");
   size(1280, 800, P2D);
   
   frameRate(60);
   
+  logMsg(INFO, "Preparing shaders.");
   fx = new PostFX(this);
  
   /* Pencil colors from vim-colors-pencil
@@ -100,6 +105,7 @@ void setup() {
   */ 
 
   // set up colors
+  logMsg(INFO, "Setting up colors.");
   colors = new HashMap<String,Integer>();
   // pencil palette
   colors.put("black",         #212121);
@@ -136,46 +142,39 @@ void setup() {
   colors.put("yellow",       #f3e430);
   colors.put("dark yellow",  #a89c14);
 
-
   // load color settings
   bgColor = settings.getString("background");
   background(colors.get(bgColor));
   
   // keybindings
+  logMsg(INFO, "Binding keys.");
   keybindings = new HashMap<Character,String>();
-  keybindings.put('p', "draw preferred distance");
-  keybindings.put('i', "draw interactions");
-  keybindings.put('w', "wrap around");
   keybindings.put('a', "apply attraction");
-  keybindings.put('r', "apply repell");
-  keybindings.put('v', "draw velocity line");
-  keybindings.put('m', "draw wall markers");
+  keybindings.put('i', "draw interactions");
+  keybindings.put('h', "show help");
   keybindings.put('l', "limit velocity");
-  keybindings.put('u', "show ui");
+  keybindings.put('m', "draw wall markers");
+  keybindings.put('n', "show info");
+  keybindings.put('p', "draw preferred distance");
+  keybindings.put('r', "apply repell");
   keybindings.put('s', "use shaders");
+  keybindings.put('u', "show ui");
+  keybindings.put('v', "draw velocity line");
+  keybindings.put('w', "wrap around");
   
   // UI
+  logMsg(INFO, "Initializing GUI.");
   guiContainer = new GUIContainer();
+  guiContainer.addSettingSlider("friction", 5);
+  guiContainer.addSettingSlider("interaction distance", 0);
+  guiContainer.addSettingSlider("preferred reach", 0);
+  guiContainer.addSettingSlider("preferred distance", 0);
+  guiContainer.addSettingSlider("particle energy", 2);
+  guiContainer.addSettingSlider("repell factor", 0);
+  guiContainer.addSettingSlider("attract factor", 0);
+  guiContainer.addSettingSlider("velocity limit", 0);
 
-  // setting sliders
-  int sliderHeight = 200;
-  int sliderMargin = 30;
-  int nextSliderXPos = 50;
-
-  testSlider = new Slider(sliderHeight, 50, 200, 100);
-  testSlider.pos.x = nextSliderXPos;
-  testSlider.pos.y = height - sliderMargin - sliderHeight;
-  nextSliderXPos += sliderMargin + testSlider.getComponentWidth();
-  guiContainer.add(testSlider);
-
-  frictionSlider = new SettingSlider("Friction", "friction", sliderHeight,
-                                     settings.getFloat("min friction"),
-                                     settings.getFloat("max friction"), 5);
-  frictionSlider.pos.x = nextSliderXPos;
-  frictionSlider.pos.y = height - sliderMargin  - sliderHeight;
-  nextSliderXPos += sliderMargin + frictionSlider.getComponentWidth();
-  guiContainer.add(frictionSlider);
-  
+  logMsg(INFO, "Creating particles.");
   // particle container
   particleContainer = new ParticleContainer();
   
@@ -183,8 +182,9 @@ void setup() {
   idCounter = 0;
   int numParticles = settings.getInt("number of particles");
   for(int i=0; i < numParticles; i++) {
-    particleContainer.addParticle(new Particle()); 
+    particleContainer.createAndAddParticle();
   }
+  logMsg(INFO, "Setup done!");
 }
 
 void keyPressed() {
@@ -199,15 +199,63 @@ void keyPressed() {
     settings.setBoolean(settingName, !boolSetting);
   }
   
+  // non-boolean toggle keybindings
   if (key == 'b') {
     if (bgColor == "white") {
       bgColor = "black";
     } else {
       bgColor = "white";
     }
+  } else if (key == 'c') {
+    particleContainer.createAndAddParticle();
+  } else if (key == 'd') {
+    particleContainer.removeRandomParticle();
   }
+
 }
 
+void showHelp() {
+  if (helpText == null) {
+    helpText = new StringBuilder();
+    for (char keyBinding : keybindings.keySet()) {
+      helpText.append(keyBinding);
+      helpText.append(" - ");
+      helpText.append(keybindings.get(keyBinding));
+      helpText.append("\n");
+    }
+    // help for non-setting toggles
+    helpText.append("b - toggle background light/dark background\n");
+    helpText.append("c - create a new particle\n");
+    helpText.append("d - delete a random particle\n");
+  }
+
+  textSize(16);
+  textAlign(LEFT, TOP);
+  fill(colors.get("black"));
+  rectMode(CORNER);
+  text(helpText.toString(), 20, 20, 400, height-20);
+}
+
+void showInfo() {
+  StringBuilder infoText = new StringBuilder();
+  for (char keyBinding : keybindings.keySet()) {
+    infoText.append(keybindings.get(keyBinding));
+    infoText.append(": ");
+    if (settings.getBoolean(keybindings.get(keyBinding))) {
+      infoText.append(" ON\n");
+    } else {
+      infoText.append(" OFF\n");
+    }
+  }
+
+  int boxWidth = 300;
+  int boxMargin = 20;
+  textSize(14);
+  textAlign(RIGHT, TOP);
+  fill(colors.get("black"));
+  rectMode(CORNER);
+  text(infoText.toString(), width-boxMargin-boxWidth, boxMargin, boxWidth, height-boxMargin);
+}
 
 void draw() {
   //if (frameCount % 10 == 0)
@@ -234,6 +282,14 @@ void draw() {
   // draw the UI
   if (settings.getBoolean("show ui")) {
     guiContainer.updateGUI();
+  }
+
+  if (settings.getBoolean("show help")) {
+    showHelp();
+  }
+
+  if (settings.getBoolean("show info")) {
+    showInfo();
   }
 
 }
