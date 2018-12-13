@@ -11,19 +11,19 @@ class Particle {
   Float repellFactor;
   Float attractFactor;
 
-  int fillColor;
+  int particleColor;
   int strokeColor;
+  int velocityLineColor;
   
   float speedSize;
   
-  Particle(String colorStyle) {
-    this("p" + String.valueOf(idCounter++), colorStyle);
+  Particle() {
+    this("p" + String.valueOf(idCounter++));
   }
   
-  Particle(String name, String colorStyle) {
+  Particle(String name) {
     this.name = name;
     this.initWithDefaults();
-    this.setColorStyle(colorStyle);
   }
   
   void initWithDefaults() {
@@ -54,30 +54,34 @@ class Particle {
     this.attractFactor = settings.getFloat("attract factor");
 
     // colors
-    this.setColorStyle("pinkish");
+    this.updateColorStyle();
   }
 
-  void setColorStyle(String colorStyle) {
+  /**
+   * Update particle color config based on current value of global colorStyle
+   * variable.
+   */
+  void updateColorStyle() {
     colorMode(HSB, 360, 100, 100, 100);
     float randomHue = random(0, 360);
     float randomSaturation = random(10, 70);
     float randomBrightness = random(40, 100);
 
     //float hue = idCounter/settings.getFloat("number of particles")*360;
-    //this.fillColor = color(180, 50, randomBrightness, 90);
-    //this.fillColor = color(0, 100, 100, 100);
+    //this.particleColor = color(180, 50, randomBrightness, 90);
+    //this.particleColor = color(0, 100, 100, 100);
 
     switch(colorStyle) {
       case "pinkish":
-        this.fillColor = color(300, randomSaturation, 90, 90);
+        this.particleColor = color(300, randomSaturation, 90, 90);
         break;
       default:
-        this.fillColor = color(randomHue, 70, 90, 90);
+        this.particleColor = color(randomHue, 70, 90, 90);
     }
 
-    this.strokeColor = color(hue(this.fillColor),
-                             saturation(this.fillColor),
-                             //brightness(this.fillColor) - 30,
+    this.strokeColor = color(hue(this.particleColor),
+                             saturation(this.particleColor),
+                             //brightness(this.particleColor) - 30,
                              0,
                              80);
   }
@@ -104,17 +108,19 @@ class Particle {
                               green(trg.strokeColor),
                               blue(trg.strokeColor),
                               transparency);
-      int fillColor = color(red(trg.fillColor),
-                            green(trg.fillColor),
-                            blue(trg.fillColor),
+      int trgParticleColor = color(red(trg.particleColor),
+                            green(trg.particleColor),
+                            blue(trg.particleColor),
                             transparency);
 
+      // draw preferred distance line
       strokeWeight(2);
-      stroke(fillColor);
+      stroke(trgParticleColor);
       line(preferredPos.x, preferredPos.y, this.pos.x, this.pos.y);
       float prefMarkerSize = settings.getFloat("preferred marker size");
 
-      fill(fillColor);
+      // draw preferred distance end dot
+      fill(trgParticleColor);
       noStroke();
       ellipseMode(CENTER);
       ellipse(preferredPos.x, preferredPos.y, prefMarkerSize, prefMarkerSize);
@@ -150,7 +156,7 @@ class Particle {
     
     // body
     if (settings.getBoolean("draw particles")) {
-      fill(this.fillColor);
+      fill(this.particleColor);
       strokeWeight(1);
       //stroke(this.strokeColor);
       noStroke();
@@ -161,7 +167,12 @@ class Particle {
     // velocity line
     float lineScale = settings.getFloat("velocity line scale");
     if (settings.getBoolean("draw velocity line")) {
-      stroke(this.strokeColor);
+      colorMode(RGB, 255, 255, 255);
+      int velocityLineColorValue = getThemeColor("velocity line");
+      //stroke(this.strokeColor);
+      stroke(velocityLineColorValue);
+      //stroke(getThemeColor("velocity line"));
+      //stroke(colors.get("pale blue"));
       strokeWeight(2);
       if (settings.getBoolean("reverse velocity line")) {
         line(this.pos.x, this.pos.y,

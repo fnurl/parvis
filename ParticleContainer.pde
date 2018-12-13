@@ -40,8 +40,8 @@ class ParticleContainer {
   }
 
   // create, add and return new Particle (for further customization)
-  Particle createAndAddParticle(String colorStyle) {
-    Particle particle = new Particle(colorStyle);
+  Particle createAndAddParticle() {
+    Particle particle = new Particle();
     this.particles.add(particle);
     logMsg(DEBUG_VERBOSE, "Created particle.");
     return particle;
@@ -60,9 +60,9 @@ class ParticleContainer {
     return this.particles.size();
   }
 
-  void setColorStyle(String colorStyle) {
+  void updateColorStyle() {
     for (Particle p : this.particles) {
-      p.setColorStyle(colorStyle);
+      p.updateColorStyle();
     }
   }
 
@@ -276,7 +276,7 @@ class ParticleContainer {
     float ypos = p.pos.y;
     float wallPushDistance =  this.wallPushDistance;
     boolean drawMarker = settings.getBoolean("draw wall markers");
-    int fc = p.fillColor;
+    int fc = p.particleColor;
     
     // marker style
     float wallCloseness;
@@ -416,10 +416,10 @@ class ParticleContainer {
         
           // show repells
           if (settings.getBoolean("draw repells") && absDist <= repellDistance) {
-            colorMode(RGB);
+            colorMode(RGB, 255, 255, 255);
             float repellStr = 255 * (repellDistance-absDist)/repellDistance;
-            int repellColor = modifyAlpha(colors.get("dark red"), int(repellStr));
-            //int repellColor = colors.get("dark red");
+            //int repellColor = modifyAlpha(colors.get("dark red"), int(repellStr));
+            int repellColor = modifyAlpha(getThemeColor("repell line"), int(repellStr));
             stroke(repellColor);
             strokeWeight(3);
             line(src.pos.x, src.pos.y, trg.pos.x, trg.pos.y);
@@ -427,10 +427,10 @@ class ParticleContainer {
         
           // show attracts
           if (settings.getBoolean("draw attracts") && absDist <= attractDistance) {
-            colorMode(RGB);
+            colorMode(RGB, 255, 255, 255);
             float attractStr = 255 * (attractDistance-absDist)/attractDistance;
-            int attractColor = modifyAlpha(colors.get("dark green"), int(attractStr));
-            //int attractColor = colors.get("dark green");
+            //int attractColor = modifyAlpha(colors.get("dark green"), int(attractStr));
+            int attractColor = modifyAlpha(getThemeColor("attract line"), int(attractStr));
             stroke(attractColor);
             strokeWeight(1);
             line(src.pos.x, src.pos.y, trg.pos.x, trg.pos.y);

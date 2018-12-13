@@ -7,6 +7,10 @@ import ch.bildspur.postfx.*;
 
 PostFX fx;
 
+/**
+ * Global context variables are accessible from all classes.
+ */
+
 // debug level. 0 is none, 5 is alot.
 final static int ERRORS = 1;
 final static int INFO = 2;
@@ -15,7 +19,8 @@ final static int DEBUG_VERBOSE = 4;
 
 final static int LOGLEVEL = INFO;
 
-JSONObject settings;
+JSONObject settings;          // will load settings.json into settings
+JSONObject colorSettings;     // will load colors.json into colorSettings
 int idCounter;
 
 // keyboard controls
@@ -23,9 +28,12 @@ HashMap<Character,String> keybindings;
 StringBuilder helpText;
 
 // some colors
-HashMap<String,Integer> colors;
-String bgColor;
-String textColor;
+HashMap<String,Integer> colors;        // color names as keys, colors as values (ints)
+HashMap<String,String> currentTheme;   // GUI element names as keys, and color names as values
+HashMap<String,String> lightTheme;     // light theme
+HashMap<String,String> darkTheme;      // dark theme
+//String bgColor;
+//String textColor;
 String colorStyle;
 final int inactiveAlpha = 128;
 final int activeAlpha = 192;
@@ -35,8 +43,8 @@ PFont font;
 
 // UI
 GUIContainer guiContainer;
-Slider testSlider;
-SettingSlider frictionSlider;
+//Slider testSlider;
+//SettingSlider frictionSlider;
 
 // the particle container
 ParticleContainer particleContainer;
@@ -60,104 +68,73 @@ static int modifyAlpha(int colorValue, int newAlpha) {
   return (colorValue & 0xffffff) | (newAlpha << 24); 
 }
 
+/**
+ * Return a theme (HashMap<String,String> of element names and color names)
+ * loaded from a JSON file.
+ */
+HashMap<String,String> loadTheme(String filename) {
+  HashMap<String,String> theme = new HashMap<String,String>();
+  JSONObject json = loadJSONObject(filename);
+  String[] elementNames = (String[]) json.keys().toArray(new String[json.size()]);
+  for (String elementName : elementNames) {
+    theme.put(elementName, json.getString(elementName));
+  }
+  return theme;
+}
+
+/**
+ * Return a HashMap<String,Integer> of color names and colors loaded from
+ * a JSON file.
+ */
+HashMap<String,Integer> loadColors(String filename) {
+  HashMap<String,Integer> loadedColors = new HashMap<String,Integer>();
+  JSONObject json = loadJSONObject(filename);
+  String[] colorNames = (String[]) json.keys().toArray(new String[json.size()]);
+  int unhexed;
+
+  colorMode(RGB, 255, 255, 255);
+  for (String colorName : colorNames) {
+    unhexed = unhex(json.getString(colorName));
+    loadedColors.put(colorName, color(red(unhexed), green(unhexed), blue(unhexed)));
+  }
+  return loadedColors;
+}
+
+/**
+ * Return the color value associated with a specific theme element using the
+ * current theme and the currently loaded colors/color names
+ */
+int getThemeColor(String elementName) {
+  return colors.get(currentTheme.get(elementName));
+}
+
 void setup() {
-  fullScreen(P2D);
+  //fullScreen(P2D);
+  size(1280, 800, P2D);
   //size(800, 600);
-  //size(1280, 800, P2D);
   frameRate(60);
 
   logMsg(INFO, "Loading settings.");
   settings = loadJSONObject("settings.json");
-  logMsg(INFO, "Initializing graphics.");
   
   logMsg(INFO, "Preparing shaders.");
   fx = new PostFX(this);
  
-  /* Pencil colors from vim-colors-pencil
-  black         = #212121
-  medium_gray   = #767676
-  white         = #F1F1F1
-  actual_white  = #FFFFFF
-  light_black   = #424242
-  lighter_black = #545454
+  // load and set up colors
+  logMsg(INFO, "Loading colors.");
+  colors = loadColors("colors.json");
 
-  Default: darker shadow and whiter grays
-  subtle_black  = #262626
-  light_gray    = #D9D9D9
-  lighter_gray  = #E5E6E6
+  // color themes
+  logMsg(INFO, "Loading themes.");
+  lightTheme = loadTheme("light-theme.json");
+  darkTheme = loadTheme("dark-theme.json");
+  currentTheme = lightTheme;
 
-  High Contrast: lighter shadows and darker grays
-  subtle_black  = #303030
-  light_gray    = #B2B2B2
-  lighter_gray  = #C6C6C6
-
-  pink          = #fb007a
-  dark_red      = #C30771
-  light_red     = #E32791
-  orange        = #D75F5F
-  darker_blue   = #005F87
-  dark_blue     = #008EC4
-  blue          = #20BBFC
-  light_blue    = #b6d6fd
-  dark_cyan     = #20A5BA
-  light_cyan    = #4FB8CC
-  dark_green    = #10A778
-  light_green   = #5FD7A7
-  dark_purple   = #523C79
-  light_purple  = #6855DE
-  yellow        = #F3E430
-  dark_yellow   = #A89C14
-  */ 
-
-  // set up colors
-  logMsg(INFO, "Setting up colors.");
-  colors = new HashMap<String,Integer>();
-  // pencil palette
-  colors.put("black",         #212121);
-  colors.put("medium gray",   #767676);
-  colors.put("white",         #f1f1f1);
-  colors.put("actual white",  #ffffff);
-  colors.put("light black",   #424242);
-  colors.put("lighter black", #545454);
-
-  if (!settings.getBoolean("high contrast")) {
-    colors.put("subtle black", #262626);
-    colors.put("light gray",   #d9d9d9);
-    colors.put("lighter gray", #e5e6e6);
-  } else {
-    colors.put("subtle black", #303030);
-    colors.put("light gray",   #b2b2b2);
-    colors.put("lighter gray", #c6c6c6);
-  }
- 
-  colors.put("pink",         #fb007a);
-  colors.put("dark red",     #c30771);
-  colors.put("light red",    #e32791);
-  colors.put("orange",       #d75f5f);
-  colors.put("darker blue",  #005f87);
-  colors.put("dark blue",    #008ec4);
-  colors.put("light blue",   #20bbfc);  // pencil calls this blue
-  colors.put("pale blue",    #b6d6fd);  // pencil calls this light blue
-  colors.put("dark cyan",    #20a5ba);
-  colors.put("light cyan",   #4fb8cc);
-  colors.put("dark green",   #10a778);
-  colors.put("light green",  #5fd7a7);
-  colors.put("dark purple",  #523c79);
-  colors.put("light purple", #6855de);
-  colors.put("yellow",       #f3e430);
-  colors.put("dark yellow",  #a89c14);
-
-  // load color settings
-  bgColor = settings.getString("background");
-  textColor = settings.getString("text color");
- 
   // color style
   colorStyle = "random";
 
   // font
   logMsg(INFO, "Loading font.");
-  //String[] fontList = PFont.list();
-  //printArray(fontList);
   font = createFont("FantasqueSansMono-Regular", 14, true);
   textFont(font, 15);
 
@@ -204,7 +181,7 @@ void setup() {
   idCounter = 0;
   int numParticles = settings.getInt("number of particles");
   for(int i=0; i < numParticles; i++) {
-    particleContainer.createAndAddParticle(colorStyle);
+    particleContainer.createAndAddParticle();
   }
   logMsg(INFO, "Setup done!");
 }
@@ -219,10 +196,12 @@ void keyPressed() {
     settingName = keybindings.get(key);
     boolSetting = settings.getBoolean(settingName);
     settings.setBoolean(settingName, !boolSetting);
+    logMsg(INFO, "setting toggled: " + settingName);
   }
   
   // non-boolean toggle keybindings
   if (key == 'b') {
+    /*
     if (bgColor.equals("white")) {
       bgColor = "black";
       textColor = "white";
@@ -230,8 +209,14 @@ void keyPressed() {
       bgColor = "white";
       textColor = "black";
     }
+    */
+    if (currentTheme == lightTheme) {
+      currentTheme = darkTheme;
+    } else if (currentTheme == darkTheme) {
+      currentTheme = lightTheme;
+    }
   } else if (key == 'c') {
-    particleContainer.createAndAddParticle(colorStyle);
+    particleContainer.createAndAddParticle();
   } else if (key == 'd') {
     particleContainer.removeRandomParticle();
   } else if (key == 'S') {
@@ -240,7 +225,7 @@ void keyPressed() {
     } else {
       colorStyle = "pinkish";
     }
-    particleContainer.setColorStyle(colorStyle);
+    particleContainer.updateColorStyle();
   }
 
 }
@@ -263,7 +248,8 @@ void showHelp() {
   //textSize(14);
   //textFont(font, 14);
   textAlign(LEFT, TOP);
-  fill(colors.get(textColor));
+  //fill(colors.get(textColor));
+  fill(getThemeColor("text"));
   rectMode(CORNER);
   text(helpText.toString(), 20, 20, 400, height-20);
 }
@@ -291,13 +277,15 @@ void showInfo() {
   //textSize(14);
   //textFont(font, 14);
   textAlign(RIGHT, TOP);
-  fill(colors.get(textColor));
+  //fill(colors.get(textColor));
+  fill(getThemeColor("text"));
   rectMode(CORNER);
   text(infoText.toString(), width-boxMargin-boxWidth, boxMargin, boxWidth, height-boxMargin);
 }
 
 void draw() {
-  background(colors.get(bgColor));
+  //background(colors.get(bgColor));
+  background(getThemeColor("background"));
   particleContainer.updateAndDraw();
   
   // add shader

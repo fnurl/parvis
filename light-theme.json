@@ -1,0 +1,7 @@
+{
+    "background":     "white",
+    "text":           "black",
+    "velocity line":  "black",
+    "attract line":   "dark green",
+    "repell line":    "dark green"
+}
