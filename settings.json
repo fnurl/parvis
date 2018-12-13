@@ -2,7 +2,7 @@
     "show ui": false,
     "show help": false,
     "show info": false,
-    "use shaders": true,
+    "use shaders": false,
     "high contrast": false,
 
     "number of particles": 15,
@@ -49,12 +49,12 @@
     "wall padding": 5,
     "wall marker thickness": 5,
 
-    "draw wall markers": true,
+    "draw wall markers": false,
     "draw preferred distance": false,
     "draw attracts": true,
-    "draw repells": true,
+    "draw repells": false,
     "draw speedsize": false,
-    "draw particles": true,
+    "draw particles": false,
 
     "max particle size": 50,
     "min particle size": 5,
@@ -71,6 +71,8 @@
     "max velocity line scale": 15,
     "min velocity line scale": 1,
     "velocity line scale": 10,
+
+    "reverse velocity line": false,
 
     "max preferred reach": 800,
     "min preferred reach": 100,

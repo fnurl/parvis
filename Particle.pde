@@ -16,13 +16,14 @@ class Particle {
   
   float speedSize;
   
-  Particle() {
-    this("p" + String.valueOf(idCounter++));
+  Particle(String colorStyle) {
+    this("p" + String.valueOf(idCounter++), colorStyle);
   }
   
-  Particle(String name) {
+  Particle(String name, String colorStyle) {
     this.name = name;
     this.initWithDefaults();
+    this.setColorStyle(colorStyle);
   }
   
   void initWithDefaults() {
@@ -53,15 +54,27 @@ class Particle {
     this.attractFactor = settings.getFloat("attract factor");
 
     // colors
+    this.setColorStyle("pinkish");
+  }
+
+  void setColorStyle(String colorStyle) {
     colorMode(HSB, 360, 100, 100, 100);
     float randomHue = random(0, 360);
     float randomSaturation = random(10, 70);
     float randomBrightness = random(40, 100);
+
     //float hue = idCounter/settings.getFloat("number of particles")*360;
-    //this.fillColor = color(randomHue, 80, 80, 90);
-    this.fillColor = color(300, randomSaturation, 90, 90);
     //this.fillColor = color(180, 50, randomBrightness, 90);
     //this.fillColor = color(0, 100, 100, 100);
+
+    switch(colorStyle) {
+      case "pinkish":
+        this.fillColor = color(300, randomSaturation, 90, 90);
+        break;
+      default:
+        this.fillColor = color(randomHue, 70, 90, 90);
+    }
+
     this.strokeColor = color(hue(this.fillColor),
                              saturation(this.fillColor),
                              //brightness(this.fillColor) - 30,
@@ -150,11 +163,14 @@ class Particle {
     if (settings.getBoolean("draw velocity line")) {
       stroke(this.strokeColor);
       strokeWeight(2);
-      PVector velocityLine = PVector.mult(this.vel, -1);
-      //line(this.pos.x, this.pos.y,
-      //     this.pos.x + this.vel.x*lineScale, this.pos.y + this.vel.y*lineScale);
-      line(this.pos.x, this.pos.y,
-           this.pos.x + velocityLine.x*lineScale, this.pos.y + velocityLine.y*lineScale);
+      if (settings.getBoolean("reverse velocity line")) {
+        line(this.pos.x, this.pos.y,
+             this.pos.x + this.vel.x*lineScale, this.pos.y + this.vel.y*lineScale);
+      } else {
+        PVector velocityLine = PVector.mult(this.vel, -1);
+        line(this.pos.x, this.pos.y,
+            this.pos.x + velocityLine.x*lineScale, this.pos.y + velocityLine.y*lineScale);
+      }
     }
 
     // acceleration line

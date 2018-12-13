@@ -26,6 +26,7 @@ StringBuilder helpText;
 HashMap<String,Integer> colors;
 String bgColor;
 String textColor;
+String colorStyle;
 final int inactiveAlpha = 128;
 final int activeAlpha = 192;
 
@@ -60,14 +61,14 @@ static int modifyAlpha(int colorValue, int newAlpha) {
 }
 
 void setup() {
+  fullScreen(P2D);
+  //size(800, 600);
+  //size(1280, 800, P2D);
+  frameRate(60);
+
   logMsg(INFO, "Loading settings.");
   settings = loadJSONObject("settings.json");
-  //size(800, 600);
-  //fullScreen(P2D);
   logMsg(INFO, "Initializing graphics.");
-  size(1280, 800, P2D);
-  
-  frameRate(60);
   
   logMsg(INFO, "Preparing shaders.");
   fx = new PostFX(this);
@@ -150,6 +151,9 @@ void setup() {
   bgColor = settings.getString("background");
   textColor = settings.getString("text color");
  
+  // color style
+  colorStyle = "random";
+
   // font
   logMsg(INFO, "Loading font.");
   //String[] fontList = PFont.list();
@@ -170,6 +174,7 @@ void setup() {
   keybindings.put('i', "draw particles");
   keybindings.put('m', "draw wall markers");
   keybindings.put('v', "draw velocity line");
+  keybindings.put('V', "reverse velocity line");
   keybindings.put('z', "draw speedsize");
   keybindings.put('u', "show ui");
   keybindings.put('n', "show info");
@@ -199,7 +204,7 @@ void setup() {
   idCounter = 0;
   int numParticles = settings.getInt("number of particles");
   for(int i=0; i < numParticles; i++) {
-    particleContainer.createAndAddParticle();
+    particleContainer.createAndAddParticle(colorStyle);
   }
   logMsg(INFO, "Setup done!");
 }
@@ -226,9 +231,16 @@ void keyPressed() {
       textColor = "black";
     }
   } else if (key == 'c') {
-    particleContainer.createAndAddParticle();
+    particleContainer.createAndAddParticle(colorStyle);
   } else if (key == 'd') {
     particleContainer.removeRandomParticle();
+  } else if (key == 'S') {
+    if (colorStyle.equals("pinkish")) {
+      colorStyle = "random";
+    } else {
+      colorStyle = "pinkish";
+    }
+    particleContainer.setColorStyle(colorStyle);
   }
 
 }

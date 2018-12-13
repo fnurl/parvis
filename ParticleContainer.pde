@@ -40,8 +40,8 @@ class ParticleContainer {
   }
 
   // create, add and return new Particle (for further customization)
-  Particle createAndAddParticle() {
-    Particle particle = new Particle();
+  Particle createAndAddParticle(String colorStyle) {
+    Particle particle = new Particle(colorStyle);
     this.particles.add(particle);
     logMsg(DEBUG_VERBOSE, "Created particle.");
     return particle;
@@ -58,6 +58,12 @@ class ParticleContainer {
 
   int getNumberOfParticles() {
     return this.particles.size();
+  }
+
+  void setColorStyle(String colorStyle) {
+    for (Particle p : this.particles) {
+      p.setColorStyle(colorStyle);
+    }
   }
 
   void updateAndDraw() {
