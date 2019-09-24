@@ -109,11 +109,14 @@ int getThemeColor(String elementName) {
 }
 
 void setup() {
+  //fullScreen(P3D);
   //fullScreen(P2D);
-  //size(1282, 800, P3D);
-  size(1282, 800, P2D);
-  //size(800, 600, P2D);
+
+  size(1280, 800, P3D);
+  //size(1280, 800, P2D);
+
   //size(800, 600, P3D);
+  //size(800, 600, P2D);
 
   logMsg(INFO, "Loading settings...");
   settings = loadJSONObject("settings.json");
