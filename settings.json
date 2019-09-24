@@ -2,10 +2,11 @@
     "show ui": false,
     "show help": false,
     "show info": false,
+    "show FPS": false,
     "use shaders": false,
     "high contrast": false,
 
-    "number of particles": 15,
+    "number of particles": 20,
     "background": "white",
     "text color": "black",
 
@@ -56,7 +57,7 @@
     "draw speedsize": false,
     "draw particles": false,
 
-    "max particle size": 50,
+    "max particle size": 100,
     "min particle size": 5,
     "particle size": 30,
 
@@ -68,11 +69,12 @@
     "min speed magnification": 4,
     "speed magnification": 8,
 
-    "max velocity line scale": 15,
+    "max velocity line scale": 50,
     "min velocity line scale": 1,
     "velocity line scale": 10,
 
     "reverse velocity line": false,
+    "invert speedsize": false,
 
     "max preferred reach": 800,
     "min preferred reach": 100,

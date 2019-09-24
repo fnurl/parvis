@@ -1,7 +1,18 @@
 {
-    "background":     "black",
-    "text":           "white",
-    "velocity line":  "white",
-    "attract line":   "light green",
-    "repell line":    "light green"
+    "background":              "black",
+    "text":                    "white",
+    "velocity line":           "light gray",
+    "attract line":            "light green",
+    "repell line":             "light red",
+
+    "ui active-bg":            "black",
+    "ui inactive-bg":          "light black",
+
+    "ui label active-bg":      "black",
+    "ui label inactive-bg":    "light black",
+    "ui label active-text":    "lighter gray",
+    "ui label inactive-text":  "light gray",
+
+    "ui marker active":        "light purple",
+    "ui marker inactive":      "dark purple"
 }

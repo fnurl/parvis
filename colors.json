@@ -1,5 +1,6 @@
 {
-  "black" :        "212121",
+  "black":         "212121",
+  "actual black":  "000000",
   "medium gray":   "767676",
   "white":         "f1f1f1",
   "actual white":  "ffffff",

@@ -50,6 +50,27 @@ class GUIComponent {
   }
 
   /**
+   * Update widget colors from current theme.
+   */
+  void updateColors() {
+    this.activeBgColor = modifyAlpha(getThemeColor("ui active-bg"), activeAlpha);
+    this.inactiveBgColor = modifyAlpha(getThemeColor("ui inactive-bg"), inactiveAlpha);
+    this.bgColor = this.inactiveBgColor;
+
+    //this.labelBgActiveColor = modifyAlpha(colors.get("white"), activeAlpha);
+    //this.labelBgInactiveColor = modifyAlpha(colors.get("light gray"), inactiveAlpha);
+    this.labelBgActiveColor = modifyAlpha(getThemeColor("ui label active-bg"), activeAlpha);
+    this.labelBgInactiveColor = modifyAlpha(getThemeColor("ui label inactive-bg"), inactiveAlpha);
+    this.labelBgColor = this.labelBgInactiveColor;
+
+    //this.labelTextActiveColor = modifyAlpha(colors.get("light black"), activeAlpha);
+    //this.labelTextInactiveColor = modifyAlpha(colors.get("lighter black"), activeAlpha);;
+    this.labelTextActiveColor = modifyAlpha(getThemeColor("ui label active-text"), activeAlpha);
+    this.labelTextInactiveColor = modifyAlpha(getThemeColor("ui label inactive-text"), activeAlpha);;
+    this.labelTextColor = this.labelTextInactiveColor;
+  }
+
+  /**
    * Return the width of the component
    */
   int getComponentWidth() {
@@ -175,31 +196,32 @@ class Slider extends GUIComponent {
     this.updateMarkerPosFromValue();
 
     // colors
-    this.activeBgColor = modifyAlpha(colors.get("white"), activeAlpha);
-    this.inactiveBgColor = modifyAlpha(colors.get("light gray"), inactiveAlpha);
-    this.bgColor = this.inactiveBgColor;
-
-    this.labelBgActiveColor = modifyAlpha(colors.get("white"), activeAlpha);
-    this.labelBgInactiveColor = modifyAlpha(colors.get("light gray"), inactiveAlpha);
-    this.labelBgColor = this.labelBgInactiveColor;
-    this.labelTextActiveColor = modifyAlpha(colors.get("light black"), activeAlpha);
-    this.labelTextInactiveColor = modifyAlpha(colors.get("lighter black"), activeAlpha);;
-    this.labelTextColor = this.labelTextInactiveColor;
-
-    this.markerActiveColor = modifyAlpha(colors.get("light red"), activeAlpha);
-    this.markerInactiveColor = modifyAlpha(colors.get("dark red"), inactiveAlpha);
-    this.markerColor = this.markerInactiveColor;
+    this.updateColors();
 
     // create graphics objects to draw on
     this.widget = createGraphics(this.width, this.height);
     this.label = createGraphics(this.height, this.labelHeight);
   }
 
+  @Override
+  void updateColors() {
+    super.updateColors();
+
+    //this.markerActiveColor = modifyAlpha(colors.get("light red"), activeAlpha);
+    //this.markerInactiveColor = modifyAlpha(colors.get("dark red"), inactiveAlpha);
+    this.markerActiveColor = modifyAlpha(getThemeColor("ui marker active"), activeAlpha);
+    this.markerInactiveColor = modifyAlpha(getThemeColor("ui marker inactive"), inactiveAlpha);
+    this.markerColor = this.markerInactiveColor;
+  }
+
+
   // set marker colors to dark basename (inactive) and light basename (active)
+  /*
   void setMarkerColors(String baseName) {
     this.markerActiveColor = modifyAlpha(colors.get("light " + baseName), activeAlpha);
     this.markerInactiveColor = modifyAlpha(colors.get("dark " + baseName), inactiveAlpha);
   }
+  */
 
   @Override
   void componentDragged() {

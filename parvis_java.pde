@@ -110,22 +110,23 @@ int getThemeColor(String elementName) {
 
 void setup() {
   //fullScreen(P2D);
-  size(1280, 800, P2D);
-  //size(800, 600);
-  frameRate(60);
+  //size(1282, 800, P3D);
+  size(1282, 800, P2D);
+  //size(800, 600, P2D);
+  //size(800, 600, P3D);
 
-  logMsg(INFO, "Loading settings.");
+  logMsg(INFO, "Loading settings...");
   settings = loadJSONObject("settings.json");
   
-  logMsg(INFO, "Preparing shaders.");
+  logMsg(INFO, "Preparing shaders...");
   fx = new PostFX(this);
  
   // load and set up colors
-  logMsg(INFO, "Loading colors.");
+  logMsg(INFO, "Loading colors...");
   colors = loadColors("colors.json");
 
   // color themes
-  logMsg(INFO, "Loading themes.");
+  logMsg(INFO, "Loading themes...");
   lightTheme = loadTheme("light-theme.json");
   darkTheme = loadTheme("dark-theme.json");
   currentTheme = lightTheme;
@@ -134,12 +135,12 @@ void setup() {
   colorStyle = "random";
 
   // font
-  logMsg(INFO, "Loading font.");
-  font = createFont("FantasqueSansMono-Regular", 14, true);
+  logMsg(INFO, "Loading font...");
+  font = createFont("FantasqueSansMono-Regular", 15, true);
   textFont(font, 15);
 
   // keybindings
-  logMsg(INFO, "Binding keys.");
+  logMsg(INFO, "Binding keys...");
   keybindings = new HashMap<Character,String>();
   keybindings.put('a', "apply attraction");
   keybindings.put('r', "apply repell");
@@ -153,13 +154,15 @@ void setup() {
   keybindings.put('v', "draw velocity line");
   keybindings.put('V', "reverse velocity line");
   keybindings.put('z', "draw speedsize");
+  keybindings.put('Z', "invert speedsize");
   keybindings.put('u', "show ui");
   keybindings.put('n', "show info");
   keybindings.put('h', "show help");
+  keybindings.put('f', "show FPS");
   keybindings.put('s', "use shaders");
   
   // UI
-  logMsg(INFO, "Initializing GUI.");
+  logMsg(INFO, "Initializing GUI...");
   guiContainer = new GUIContainer();
   guiContainer.addSettingSlider("friction", 5);
   guiContainer.addSettingSlider("velocity limit", 0);
@@ -173,7 +176,7 @@ void setup() {
   guiContainer.addSettingSlider("speed magnification", 0);
   guiContainer.addSettingSlider("velocity line scale", 0);
 
-  logMsg(INFO, "Creating particles.");
+  logMsg(INFO, "Creating particles...");
   // particle container
   particleContainer = new ParticleContainer();
   
@@ -183,7 +186,10 @@ void setup() {
   for(int i=0; i < numParticles; i++) {
     particleContainer.createAndAddParticle();
   }
-  logMsg(INFO, "Setup done!");
+  logMsg(INFO, "Starting!");
+
+  // calling frameRate to early produces a crash
+  frameRate(60);
 }
 
 void keyPressed() {
@@ -197,35 +203,40 @@ void keyPressed() {
     boolSetting = settings.getBoolean(settingName);
     settings.setBoolean(settingName, !boolSetting);
     logMsg(INFO, "setting toggled: " + settingName);
+    return;
   }
   
   // non-boolean toggle keybindings
-  if (key == 'b') {
-    /*
-    if (bgColor.equals("white")) {
-      bgColor = "black";
-      textColor = "white";
-    } else {
-      bgColor = "white";
-      textColor = "black";
-    }
-    */
-    if (currentTheme == lightTheme) {
-      currentTheme = darkTheme;
-    } else if (currentTheme == darkTheme) {
-      currentTheme = lightTheme;
-    }
-  } else if (key == 'c') {
-    particleContainer.createAndAddParticle();
-  } else if (key == 'd') {
-    particleContainer.removeRandomParticle();
-  } else if (key == 'S') {
-    if (colorStyle.equals("pinkish")) {
-      colorStyle = "random";
-    } else {
-      colorStyle = "pinkish";
-    }
-    particleContainer.updateColorStyle();
+  switch(key) {
+    case 'b':
+      logMsg(INFO, "Toggle theme.");
+      if (currentTheme == lightTheme) {
+        currentTheme = darkTheme;
+      } else if (currentTheme == darkTheme) {
+        currentTheme = lightTheme;
+      }
+      guiContainer.updateColors();
+      break;
+    case 'c':
+      logMsg(INFO, "Add particle.");
+      particleContainer.createAndAddParticle();
+      break;
+    case 'd':
+      logMsg(INFO, "Delete particle.");
+      particleContainer.removeRandomParticle();
+      break;
+    case 'S':
+      logMsg(INFO, "Toggle color style.");
+      if (colorStyle.equals("pinkish")) {
+        colorStyle = "random";
+      } else {
+        colorStyle = "pinkish";
+      }
+      particleContainer.updateColorStyle();
+      break;
+    case 'q':
+      logMsg(INFO, "Byebye.");
+      exit();
   }
 
 }
@@ -283,6 +294,13 @@ void showInfo() {
   text(infoText.toString(), width-boxMargin-boxWidth, boxMargin, boxWidth, height-boxMargin);
 }
 
+void showFPS() {
+  fill(getThemeColor("text"));
+  rectMode(CORNER);
+  textAlign(LEFT, BOTTOM);
+  text(frameRate, 0, height);
+}
+
 void draw() {
   //background(colors.get(bgColor));
   background(getThemeColor("background"));
@@ -316,6 +334,10 @@ void draw() {
 
   if (settings.getBoolean("show info")) {
     showInfo();
+  }
+
+  if (settings.getBoolean("show FPS")) {
+    showFPS();
   }
 
 }

@@ -15,12 +15,19 @@ class GUIContainer {
     this.sliderMargin = 20;
     this.nextSliderXpos = this.sliderMargin;
   }
-  
+ 
+  void updateColors() {
+    for (GUIComponent component : this.components) {
+      component.updateColors();
+    }
+  }
+
   void add(GUIComponent component) {
     this.components.add(component);
   }
 
   // create and return a setting slider (in case more customization is needed)
+  // precision is the number of decimals shown in label
   SettingSlider addSettingSlider(String settingKey, int precision) {
     SettingSlider settingSlider = new SettingSlider(settingKey, this.sliderHeight, precision);
     settingSlider.pos.x = this.nextSliderXpos;

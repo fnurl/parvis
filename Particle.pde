@@ -139,11 +139,18 @@ class Particle {
   void updateSpeedSize() {
     //this.speedSize = this.vel.mag() * settings.getFloat("speed magnification") + this.size;
     if (settings.getBoolean("draw speedsize")) {
-      this.speedSize = settings.getFloat("particle size") -
-                       (this.vel.mag() * settings.getFloat("speed magnification"));
+      if (settings.getBoolean("invert speedsize")) {
+        this.speedSize = settings.getFloat("particle size") +
+                         (this.vel.mag() * settings.getFloat("speed magnification"));
+      } else {
+        this.speedSize = settings.getFloat("particle size") -
+                         (this.vel.mag() * settings.getFloat("speed magnification"));
+      }
     } else {
       this.speedSize = settings.getFloat("particle size");
     }
+    this.speedSize = constrain(speedSize, settings.getFloat("min particle size"),
+                                          settings.getFloat("max particle size"));
   }
 
   void update() {
